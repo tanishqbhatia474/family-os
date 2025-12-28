@@ -5,7 +5,7 @@ import authRoutes from './routes/auth.routes.js';
 import familyRoutes from './routes/family.routes.js';
 import personRoutes from './routes/person.routes.js';
 import ritualRoutes from './routes/ritual.routes.js';
-
+import documentRoutes from './routes/document.routes.js';
 
 
 //import routes from './routes/index.js';
@@ -21,6 +21,9 @@ app.use('/api/auth', authRoutes);app.use('/api/family', familyRoutes);
 
 
 app.use('/api/ritual', ritualRoutes);
+
+
+app.use('/api/document', documentRoutes);
 
 //app.use('/api', routes);
 app.use('/api/person', personRoutes);

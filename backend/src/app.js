@@ -6,7 +6,7 @@ import familyRoutes from './routes/family.routes.js';
 import personRoutes from './routes/person.routes.js';
 import ritualRoutes from './routes/ritual.routes.js';
 import documentRoutes from './routes/document.routes.js';
-
+import { errorHandler } from './middlewares/error.middleware.js';
 
 //import routes from './routes/index.js';
 
@@ -27,10 +27,11 @@ app.use('/api/document', documentRoutes);
 
 //app.use('/api', routes);
 app.use('/api/person', personRoutes);
+// Global error handler
+app.use(errorHandler);
 // Health check
 app.get('/', (req, res) => {
   res.send('Rituals World Backend is running');
   
 });
-
 export default app;

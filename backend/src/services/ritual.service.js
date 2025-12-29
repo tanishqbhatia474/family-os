@@ -1,5 +1,6 @@
 import Ritual from '../models/Ritual.model.js';
 import Person from '../models/Person.model.js';
+import { AppError } from '../utils/AppError.js';
 
 /**
  * CREATE RITUAL
@@ -63,11 +64,15 @@ export const updateRitualService = async (user, ritualId, data) => {
   const ritual = await Ritual.findById(ritualId);
 
   if (!ritual) {
-    throw new Error('Ritual not found');
+    throw new AppError('Ritual not found', 404, 'NOT_FOUND');
   }
 
   if (ritual.ownerPersonId.toString() !== user.personId.toString()) {
-    throw new Error('Only ritual owner can edit this ritual');
+    throw new AppError(
+      'Only ritual owner can edit this ritual',
+      403,
+      'NOT_AUTHORIZED'
+    );
   }
 
   // Ensure owner always has access
@@ -87,11 +92,15 @@ export const deleteRitualService = async (user, ritualId) => {
   const ritual = await Ritual.findById(ritualId);
 
   if (!ritual) {
-    throw new Error('Ritual not found');
+    throw new AppError('Ritual not found', 404, 'NOT_FOUND');
   }
 
   if (ritual.ownerPersonId.toString() !== user.personId.toString()) {
-    throw new Error('Only ritual owner can delete this ritual');
+    throw new AppError(
+      'Only ritual owner can delete this ritual',
+      403,
+      'NOT_AUTHORIZED'
+    );
   }
 
   await ritual.deleteOne();

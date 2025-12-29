@@ -6,25 +6,25 @@ import {
   deleteRitualService
 } from '../services/ritual.service.js';
 
-export const createRitual = async (req, res) => {
+export const createRitual = async (req, res, next) => {
   try {
     const ritual = await createRitualService(req.user, req.body);
     res.status(201).json(ritual);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    next(err);
   }
 };
 
-export const getFamilyRituals = async (req, res) => {
+export const getFamilyRituals = async (req, res, next) => {
   try {
     const rituals = await getFamilyRitualsService(req.user);
     res.json(rituals);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    next(err);
   }
 };
 
-export const getPersonRituals = async (req, res) => {
+export const getPersonRituals = async (req, res, next) => {
   try {
     const rituals = await getPersonRitualsService(
       req.user,
@@ -32,10 +32,10 @@ export const getPersonRituals = async (req, res) => {
     );
     res.json(rituals);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    next(err);
   }
 };
-export const updateRitual = async (req, res) => {
+export const updateRitual = async (req, res, next) => {
   try {
     const ritual = await updateRitualService(
       req.user,
@@ -44,14 +44,14 @@ export const updateRitual = async (req, res) => {
     );
     res.json(ritual);
   } catch (err) {
-    res.status(403).json({ message: err.message });
+    next(err);
   }
 };
-export const deleteRitual = async (req, res) => {
+export const deleteRitual = async (req, res, next) => {
   try {
     await deleteRitualService(req.user, req.params.id);
     res.json({ message: 'Ritual deleted successfully' });
   } catch (err) {
-    res.status(403).json({ message: err.message });
+    next(err);
   }
 };

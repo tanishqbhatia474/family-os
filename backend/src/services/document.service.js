@@ -3,6 +3,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { s3 } from '../config/s3.js';
 import Document from '../models/Document.model.js';
 import crypto from 'crypto';
+import { AppError } from '../utils/AppError.js';
 
 export const uploadDocumentService = async (
   user,
@@ -58,7 +59,7 @@ export const getSignedDownloadUrlService = async (user, documentId) => {
   const document = await Document.findById(documentId);
 
   if (!document) {
-    throw new Error('Document not found');
+    throw new AppError('Document not found', 404, 'NOT_FOUND');
   }
 
   // 🔒 ACCESS CHECK
@@ -69,7 +70,7 @@ export const getSignedDownloadUrlService = async (user, documentId) => {
       .includes(user.personId.toString());
 
   if (!hasAccess) {
-    throw new Error('You do not have access to this document');
+    throw new AppError('You do not have access to this document', 403, 'NOT_AUTHORIZED');
   }
 
   // Extract S3 key from fileUrl
@@ -119,12 +120,12 @@ export const deleteDocumentService = async (user, documentId) => {
   const document = await Document.findById(documentId);
 
   if (!document) {
-    throw new Error('Document not found');
+    throw new AppError('Document not found', 404, 'NOT_FOUND');
   }
 
   // 🔒 OWNER CHECK
   if (document.ownerPersonId.toString() !== user.personId.toString()) {
-    throw new Error('Only document owner can delete this document');
+    throw new AppError('Only document owner can delete this document', 403, 'NOT_AUTHORIZED');
   }
 
   // Extract S3 key from fileUrl

@@ -1,5 +1,7 @@
 import {
-  addPersonService,
+  addPersonService,setFatherService,
+  setMotherService,
+  addChildService,
   getFamilyPersonsService,getFamilyTreeService
 } from '../services/person.service.js';
 
@@ -38,6 +40,45 @@ export const editPerson = async (req, res, next) => {
       req.body
     );
     res.json(updatedPerson);
+  } catch (err) {
+    next(err);
+  }
+};
+export const setFather = async (req, res, next) => {
+  try {
+    const person = await setFatherService(
+      req.user,
+      req.params.childId,
+      req.body.fatherId
+    );
+    res.json(person);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const setMother = async (req, res, next) => {
+  try {
+    const person = await setMotherService(
+      req.user,
+      req.params.childId,
+      req.body.motherId
+    );
+    res.json(person);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const addChild = async (req, res, next) => {
+  try {
+    const person = await addChildService(
+      req.user,
+      req.params.parentId,
+      req.body.childId,
+      req.body.role // "father" or "mother"
+    );
+    res.json(person);
   } catch (err) {
     next(err);
   }

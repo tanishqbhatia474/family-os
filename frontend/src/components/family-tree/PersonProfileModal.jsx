@@ -1,8 +1,18 @@
+import { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import EditPersonModal from "./EditPersonModal";
+
+
 export default function PersonProfileModal({
   person,
   personMap,
-  onClose
+  onClose,
+  onSaved,
 }) {
+  const { user } = useAuth();
+  const isHonor = user?.isHonor;
+  const [showEdit, setShowEdit] = useState(false);
+
   if (!person || !personMap) return null;
 
   const father = person.fatherId
@@ -48,12 +58,30 @@ export default function PersonProfileModal({
           />
         </Section>
 
+        {isHonor && (
+          <button
+            onClick={() => setShowEdit(true)}
+            className="w-full bg-neutral-900 text-white py-2 rounded"
+          >
+            Edit Details
+          </button>
+        )}
+
+        {showEdit && (
+          <EditPersonModal
+            person={person}
+            onClose={() => setShowEdit(false)}
+            onSaved={onSaved}
+          />
+        )}
+
         <button
           onClick={onClose}
-          className="w-full mt-4 bg-black text-white py-2 rounded"
+          className="w-full bg-black text-white py-2 rounded"
         >
           Close
         </button>
+
       </div>
     </div>
   );

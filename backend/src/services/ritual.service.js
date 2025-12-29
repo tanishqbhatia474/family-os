@@ -49,26 +49,50 @@ export const getFamilyRitualsService = async (user) => {
   }).sort({ createdAt: -1 });
 };
 
-/**
- * GET RITUALS OF A SPECIFIC PERSON
- * - Only within same family
- * - Shows rituals written by that person
- */
 export const getPersonRitualsService = async (user, personId) => {
   if (!user.familyId) {
     throw new Error('User does not belong to a family');
   }
 
-  const person = await Person.findOne({
-    _id: personId,
-    familyId: user.familyId
-  });
-
-  if (!person) {
-    throw new Error('Person not found in your family');
-  }
-
   return Ritual.find({
+    familyId: user.familyId,
     ownerPersonId: personId
   }).sort({ createdAt: -1 });
+};
+export const updateRitualService = async (user, ritualId, data) => {
+  const ritual = await Ritual.findById(ritualId);
+
+  if (!ritual) {
+    throw new Error('Ritual not found');
+  }
+
+  if (ritual.ownerPersonId.toString() !== user.personId.toString()) {
+    throw new Error('Only ritual owner can edit this ritual');
+  }
+
+  // Ensure owner always has access
+  if (data.viewAccessPersonIds) {
+    const ids = data.viewAccessPersonIds.map(String);
+    if (!ids.includes(user.personId.toString())) {
+      data.viewAccessPersonIds.push(user.personId);
+    }
+  }
+
+  Object.assign(ritual, data);
+  await ritual.save();
+
+  return ritual;
+};
+export const deleteRitualService = async (user, ritualId) => {
+  const ritual = await Ritual.findById(ritualId);
+
+  if (!ritual) {
+    throw new Error('Ritual not found');
+  }
+
+  if (ritual.ownerPersonId.toString() !== user.personId.toString()) {
+    throw new Error('Only ritual owner can delete this ritual');
+  }
+
+  await ritual.deleteOne();
 };

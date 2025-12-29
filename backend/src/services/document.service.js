@@ -1,4 +1,5 @@
-import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { s3 } from '../config/s3.js';
 import Document from '../models/Document.model.js';
 import crypto from 'crypto';
@@ -48,4 +49,98 @@ export const uploadDocumentService = async (
   });
 
   return document;
+};
+export const getSignedDownloadUrlService = async (user, documentId) => {
+  if (!user.familyId || !user.personId) {
+    throw new Error('User does not belong to a family or person');
+  }
+
+  const document = await Document.findById(documentId);
+
+  if (!document) {
+    throw new Error('Document not found');
+  }
+
+  // 🔒 ACCESS CHECK
+  const hasAccess =
+    document.ownerPersonId.toString() === user.personId.toString() ||
+    document.viewAccessPersonIds
+      .map(id => id.toString())
+      .includes(user.personId.toString());
+
+  if (!hasAccess) {
+    throw new Error('You do not have access to this document');
+  }
+
+  // Extract S3 key from fileUrl
+  // fileUrl format: s3://bucket-name/path/to/file
+  const key = document.fileUrl.replace(
+    `s3://${process.env.AWS_S3_BUCKET_NAME}/`,
+    ''
+  );
+
+  const command = new GetObjectCommand({
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Key: key
+  });
+
+  // Signed URL valid for 5 minutes
+  const signedUrl = await getSignedUrl(s3, command, {
+    expiresIn: 300
+  });
+
+  return signedUrl;
+};
+export const listDocumentsService = async (user) => {
+  if (!user.familyId || !user.personId) {
+    throw new Error('User does not belong to a family or person');
+  }
+
+  const documents = await Document.find({
+    familyId: user.familyId,
+    $or: [
+      { ownerPersonId: user.personId },
+      { viewAccessPersonIds: user.personId }
+    ]
+  })
+    .sort({ createdAt: -1 })
+    .select('-__v');
+
+  return documents;
+};
+//export const deleteDocumentService = async (user, documentId) => {
+  import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+
+export const deleteDocumentService = async (user, documentId) => {
+  if (!user.familyId || !user.personId) {
+    throw new Error('User does not belong to a family or person');
+  }
+
+  const document = await Document.findById(documentId);
+
+  if (!document) {
+    throw new Error('Document not found');
+  }
+
+  // 🔒 OWNER CHECK
+  if (document.ownerPersonId.toString() !== user.personId.toString()) {
+    throw new Error('Only document owner can delete this document');
+  }
+
+  // Extract S3 key from fileUrl
+  const key = document.fileUrl.replace(
+    `s3://${process.env.AWS_S3_BUCKET_NAME}/`,
+    ''
+  );
+
+  // Delete from S3
+  await s3.send(
+    new DeleteObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: key
+    })
+  );
+
+  // Delete metadata from MongoDB
+  await document.deleteOne();
 };

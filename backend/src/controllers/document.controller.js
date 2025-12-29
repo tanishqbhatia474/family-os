@@ -2,11 +2,6 @@ import { uploadDocumentService ,getSignedDownloadUrlService, listDocumentsServic
 
 export const uploadDocument = async (req, res, next) => {
   try {
-    console.log('Upload request received');
-    console.log('User:', req.user);
-    console.log('File:', req.file);
-    console.log('Body:', req.body);
-    
     const document = await uploadDocumentService(
       req.user,
       req.file,
@@ -14,8 +9,6 @@ export const uploadDocument = async (req, res, next) => {
     );
     res.status(201).json(document);
   } catch (err) {
-    console.error('Document upload error:', err);
-    console.error('Error stack:', err.stack);
     next(err);
   }
 };

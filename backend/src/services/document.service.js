@@ -5,84 +5,52 @@ import Document from '../models/Document.model.js';
 import crypto from 'crypto';
 import { AppError } from '../utils/AppError.js';
 
-import mongoose from "mongoose";
-
 export const uploadDocumentService = async (
   user,
   file,
-  { title, type, viewAccessPersonIds }
+  { title, type, viewAccessPersonIds = [] }
 ) => {
-  console.log('=== Upload Service Started ===');
-  console.log('User:', user);
-  console.log('File:', file);
-  console.log('Title:', title, 'Type:', type);
-  console.log('ViewAccessPersonIds:', viewAccessPersonIds);
-
   if (!user.familyId || !user.personId) {
-    throw new Error("User does not belong to a family or person");
+    throw new Error('User does not belong to a family or person');
   }
 
   if (!file) {
-    throw new Error("File is required");
+    throw new Error('File is required');
   }
 
-  // ✅ FIX 1: normalize to array
-  const rawIds = viewAccessPersonIds
-    ? Array.isArray(viewAccessPersonIds)
-      ? viewAccessPersonIds
-      : [viewAccessPersonIds]
-    : [];
-
-  // ✅ FIX 2: cast to ObjectId
+  // Ensure owner always has access
   const accessSet = new Set(
-    rawIds.map(id => new mongoose.Types.ObjectId(id).toString())
+    viewAccessPersonIds.map(id => id.toString())
   );
-
-  // Owner always has access
   accessSet.add(user.personId.toString());
 
-  const fileExt = file.originalname.split(".").pop();
+  const fileExt = file.originalname.split('.').pop();
   const fileKey = `${user.familyId}/${user.personId}/${crypto.randomUUID()}.${fileExt}`;
 
-  console.log('S3 Config:', {
-    bucket: process.env.AWS_S3_BUCKET_NAME,
-    region: process.env.AWS_REGION,
-    hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
-    hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY
-  });
-
-  try {
-    await s3.send(
-      new PutObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: fileKey,
-        Body: file.buffer,
-        ContentType: file.mimetype
-      })
-    );
-    console.log('S3 upload successful');
-  } catch (s3Error) {
-    console.error('S3 upload failed:', s3Error);
-    throw s3Error;
-  }
+  // Upload to S3
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: fileKey,
+      Body: file.buffer,
+      ContentType: file.mimetype
+    })
+  );
 
   const fileUrl = `s3://${process.env.AWS_S3_BUCKET_NAME}/${fileKey}`;
 
+  // Save metadata in MongoDB
   const document = await Document.create({
     familyId: user.familyId,
     ownerPersonId: user.personId,
     title,
-    type: type || "OTHER", // ✅ FIX 3
+    type,
     fileUrl,
-    viewAccessPersonIds: Array.from(accessSet).map(
-      id => new mongoose.Types.ObjectId(id)
-    )
+    viewAccessPersonIds: Array.from(accessSet)
   });
 
-  console.log('Document created:', document._id);
   return document;
 };
-
 export const getSignedDownloadUrlService = async (user, documentId) => {
   if (!user.familyId || !user.personId) {
     throw new Error('User does not belong to a family or person');
@@ -114,8 +82,7 @@ export const getSignedDownloadUrlService = async (user, documentId) => {
 
   const command = new GetObjectCommand({
     Bucket: process.env.AWS_S3_BUCKET_NAME,
-    Key: key,
-    ResponseContentDisposition: `attachment; filename="${document.title || 'document'}"`
+    Key: key
   });
 
   // Signed URL valid for 5 minutes

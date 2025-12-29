@@ -28,3 +28,17 @@ export const getFamilyTree = async (req, res, next) => {
     next(err);
   }
 };
+import { editPersonService } from '../services/person.service.js';
+
+export const editPerson = async (req, res, next) => {
+  try {
+    const updatedPerson = await editPersonService(
+      req.user,
+      req.params.id,
+      req.body
+    );
+    res.json(updatedPerson);
+  } catch (err) {
+    next(err);
+  }
+};

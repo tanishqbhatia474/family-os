@@ -9,8 +9,9 @@ export default function Sidebar() {
       className="fixed left-0 top-0 h-screen w-56 px-6 pt-10 z-30
                  bg-[#114334]/85 text-white"
       style={{
-        boxShadow: "4px 0 14px rgba(0, 0, 0, 0.25)",
+        boxShadow: "4px 0 14px rgba(0, 0, 0, 0.18)",
       }}
+
     >
       {/* Brand */}
       <div className="text-sm font-medium tracking-tight mb-8 text-white/90">

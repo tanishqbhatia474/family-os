@@ -31,7 +31,7 @@ body,
 
 body {
   font-family: "Inter Variable", Inter, system-ui, sans-serif;
-  background-color: var(--bg);
+  background-color: transparent;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

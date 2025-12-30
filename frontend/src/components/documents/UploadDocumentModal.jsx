@@ -32,22 +32,34 @@ export default function UploadDocumentModal({ onClose, onUploaded }) {
       formData.append("file", file);
       formData.append("title", title);
       selectedIds.forEach(id =>
-        formData.append("viewAccessPersonIds[]", id)
+        formData.append("viewAccessPersonIds", id)
       );
-
       await uploadDocument(formData);
 
       onUploaded();
       onClose();
     } catch (err) {
-      console.error("Upload failed:", err);
-      alert("Upload failed. Please try again.");
-    } finally {
-      setLoading(false);
+    console.error("Upload failed:", err);
+
+    let message = "Upload failed";
+
+    if (err.response?.data) {
+      if (typeof err.response.data === "string") {
+        message = err.response.data;
+      } else if (err.response.data.message) {
+        message = err.response.data.message;
+      } else {
+        message = JSON.stringify(err.response.data);
+      }
+    } else if (err.message) {
+      message = err.message;
     }
+
+    alert(message);
+  } finally {
+    setLoading(false);
+  }
   };
-
-
   return (
     <div className="fixed inset-0 z-[100]">
       {/* Overlay */}

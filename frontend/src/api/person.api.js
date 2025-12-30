@@ -20,6 +20,6 @@ export const getPersonById = (personId) => {
   return http.get(`/person/${personId}`);
 };
 
-// export const updatePerson = (personId, payload) => {
-//   return http.patch(`/person/${personId}`, payload);
-// };
+export const editPerson = (personId, payload) => {
+  return http.patch(`/person/${personId}`, payload);
+};

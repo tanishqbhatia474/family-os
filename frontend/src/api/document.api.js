@@ -1,13 +1,14 @@
 import http from "./http";
 
 export const uploadDocument = (formData) =>
-  http.post("/documents", formData);
+  http.post("/document", formData);
 
 export const listDocuments = () =>
-  http.get("/documents/family");
+  http.get("/document/family");
 
 export const getDownloadUrl = (id) =>
-  http.get(`/documents/${id}/download`);
+  http.get(`/document/${id}/download`);
 
 export const deleteDocument = (id) =>
-  http.delete(`/documents/${id}`);
+  http.delete(`/document/${id}`);
+

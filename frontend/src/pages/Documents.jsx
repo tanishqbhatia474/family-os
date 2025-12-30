@@ -57,7 +57,7 @@ export default function Documents() {
     <div className="space-y-10">
 
       {/* Header */}
-      <div className="flex justify-between items-center mt-6">
+      <div className="flex justify-between items-center mt-15">
         <div>
           <h1 className="text-xl font-medium">Documents</h1>
           <p className="text-sm opacity-70">

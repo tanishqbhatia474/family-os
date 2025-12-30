@@ -1,4 +1,5 @@
 import Person from '../models/Person.model.js';
+import { AppError } from '../utils/AppError.js';
 
 export const addPersonService = async (user, data) => {
   if (!user.familyId) {
@@ -68,4 +69,180 @@ export const getFamilyTreeService = async (user) => {
   });
 
   return roots;
+};
+export const editPersonService = async (user, personId, data) => {
+  // 1️⃣ User must belong to a family
+  if (!user.familyId) {
+    throw new AppError(
+      'User does not belong to a family',
+      403,
+      'NOT_AUTHORIZED'
+    );
+  }
+
+  // 2️⃣ Only family owner can edit
+  if (!user.isHonor) {
+    throw new AppError(
+      'Only family owner can edit person details',
+      403,
+      'NOT_AUTHORIZED'
+    );
+  }
+
+  // 3️⃣ Find person
+  const person = await Person.findById(personId);
+  if (!person) {
+    throw new AppError(
+      'Person not found',
+      404,
+      'NOT_FOUND'
+    );
+  }
+
+  // 4️⃣ Person must belong to same family
+  if (person.familyId.toString() !== user.familyId.toString()) {
+    throw new AppError(
+      'Cannot edit person from another family',
+      403,
+      'NOT_AUTHORIZED'
+    );
+  }
+
+  // 5️⃣ Allow only safe fields
+  const allowedFields = ['name', 'gender', 'birthDate', 'isDeceased'];
+
+  allowedFields.forEach(field => {
+    if (data[field] !== undefined) {
+      person[field] = data[field];
+    }
+  });
+
+  await person.save();
+  return person;
+};
+
+
+/* =========================
+   SET FATHER
+========================= */
+export const setFatherService = async (user, childId, fatherId) => {
+  if (!user.isHonor) {
+    throw new AppError(
+      'Only family owner can modify relationships',
+      403,
+      'NOT_AUTHORIZED'
+    );
+  }
+
+  if (childId === fatherId) {
+    throw new AppError(
+      'Person cannot be their own father',
+      400,
+      'BAD_REQUEST'
+    );
+  }
+
+  const child = await Person.findById(childId);
+  const father = await Person.findById(fatherId);
+
+  if (!child || !father) {
+    throw new AppError('Person not found', 404, 'NOT_FOUND');
+  }
+
+  if (
+    child.familyId.toString() !== user.familyId.toString() ||
+    father.familyId.toString() !== user.familyId.toString()
+  ) {
+    throw new AppError(
+      'Persons must belong to same family',
+      403,
+      'NOT_AUTHORIZED'
+    );
+  }
+
+  child.fatherId = father._id;
+  await child.save();
+
+  return child;
+};
+
+/* =========================
+   SET MOTHER
+========================= */
+export const setMotherService = async (user, childId, motherId) => {
+  if (!user.isHonor) {
+    throw new AppError(
+      'Only family owner can modify relationships',
+      403,
+      'NOT_AUTHORIZED'
+    );
+  }
+
+  if (childId === motherId) {
+    throw new AppError(
+      'Person cannot be their own mother',
+      400,
+      'BAD_REQUEST'
+    );
+  }
+
+  const child = await Person.findById(childId);
+  const mother = await Person.findById(motherId);
+
+  if (!child || !mother) {
+    throw new AppError('Person not found', 404, 'NOT_FOUND');
+  }
+
+  if (
+    child.familyId.toString() !== user.familyId.toString() ||
+    mother.familyId.toString() !== user.familyId.toString()
+  ) {
+    throw new AppError(
+      'Persons must belong to same family',
+      403,
+      'NOT_AUTHORIZED'
+    );
+  }
+
+  child.motherId = mother._id;
+  await child.save();
+
+  return child;
+};
+
+/* =========================
+   ADD CHILD (UX API)
+========================= */
+export const addChildService = async (user, parentId, childId, role) => {
+  if (!user.isHonor) {
+    throw new AppError(
+      'Only family owner can modify relationships',
+      403,
+      'NOT_AUTHORIZED'
+    );
+  }
+
+  const parent = await Person.findById(parentId);
+  const child = await Person.findById(childId);
+
+  if (!parent || !child) {
+    throw new AppError('Person not found', 404, 'NOT_FOUND');
+  }
+
+  if (
+    parent.familyId.toString() !== user.familyId.toString() ||
+    child.familyId.toString() !== user.familyId.toString()
+  ) {
+    throw new AppError(
+      'Persons must belong to same family',
+      403,
+      'NOT_AUTHORIZED'
+    );
+  }
+
+  if (role === 'father') child.fatherId = parent._id;
+  if (role === 'mother') child.motherId = parent._id;
+
+  await child.save();
+  return child;
 };

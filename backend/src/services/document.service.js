@@ -5,29 +5,39 @@ import Document from '../models/Document.model.js';
 import crypto from 'crypto';
 import { AppError } from '../utils/AppError.js';
 
+import mongoose from "mongoose";
+
 export const uploadDocumentService = async (
   user,
   file,
-  { title, type, viewAccessPersonIds = [] }
+  { title, type, viewAccessPersonIds }
 ) => {
   if (!user.familyId || !user.personId) {
-    throw new Error('User does not belong to a family or person');
+    throw new Error("User does not belong to a family or person");
   }
 
   if (!file) {
-    throw new Error('File is required');
+    throw new Error("File is required");
   }
 
-  // Ensure owner always has access
+  // ✅ FIX 1: normalize to array
+  const rawIds = viewAccessPersonIds
+    ? Array.isArray(viewAccessPersonIds)
+      ? viewAccessPersonIds
+      : [viewAccessPersonIds]
+    : [];
+
+  // ✅ FIX 2: cast to ObjectId
   const accessSet = new Set(
-    viewAccessPersonIds.map(id => id.toString())
+    rawIds.map(id => new mongoose.Types.ObjectId(id).toString())
   );
+
+  // Owner always has access
   accessSet.add(user.personId.toString());
 
-  const fileExt = file.originalname.split('.').pop();
+  const fileExt = file.originalname.split(".").pop();
   const fileKey = `${user.familyId}/${user.personId}/${crypto.randomUUID()}.${fileExt}`;
 
-  // Upload to S3
   await s3.send(
     new PutObjectCommand({
       Bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -39,18 +49,20 @@ export const uploadDocumentService = async (
 
   const fileUrl = `s3://${process.env.AWS_S3_BUCKET_NAME}/${fileKey}`;
 
-  // Save metadata in MongoDB
   const document = await Document.create({
     familyId: user.familyId,
     ownerPersonId: user.personId,
     title,
-    type,
+    type: type || "OTHER", // ✅ FIX 3
     fileUrl,
-    viewAccessPersonIds: Array.from(accessSet)
+    viewAccessPersonIds: Array.from(accessSet).map(
+      id => new mongoose.Types.ObjectId(id)
+    )
   });
 
   return document;
 };
+
 export const getSignedDownloadUrlService = async (user, documentId) => {
   if (!user.familyId || !user.personId) {
     throw new Error('User does not belong to a family or person');

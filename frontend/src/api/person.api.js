@@ -23,3 +23,9 @@ export const getPersonById = (personId) => {
 export const editPerson = (personId, payload) => {
   return http.patch(`/person/${personId}`, payload);
 };
+
+export const setFather = (childId, fatherId) =>
+  http.patch(`/person/${childId}/set-father`, { fatherId });
+
+export const setMother = (childId, motherId) =>
+  http.patch(`/person/${childId}/set-mother`, { motherId });

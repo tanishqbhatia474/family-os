@@ -9,10 +9,12 @@ import PersonProfileModal from "../components/family-tree/PersonProfileModal";
 const renderCustomNode = (onSelect) => ({ nodeDatum }) => {
   if (!nodeDatum || nodeDatum.name === "__root__") return null;
 
+   const isDeceased = nodeDatum.raw?.isDeceased;
+
   return (
     <g
       onClick={() => {
-        console.log("Clicked ID:", nodeDatum.id);
+        // console.log("Clicked ID:", nodeDatum.id);
         onSelect(nodeDatum.raw);
       }}
       style={{ cursor: "pointer" }}
@@ -23,8 +25,8 @@ const renderCustomNode = (onSelect) => ({ nodeDatum }) => {
           x="-85"
           y="-22"
           rx="12"
-          fill="#184c3e"
-          stroke="rgba(0,0,0,0.08)"
+          fill={isDeceased ? "#5f7f74" : "#184c3e"}
+          stroke={isDeceased ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.08)"}
           strokeWidth="1"
         />
         <text
@@ -33,7 +35,7 @@ const renderCustomNode = (onSelect) => ({ nodeDatum }) => {
           textAnchor="middle"
           alignmentBaseline="middle"
           fontSize="13"
-          fill="#ffffff"
+          fill={isDeceased ? "#e5e7eb" : "#ffffff"}
           style={{
             fontFamily:
               "Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
@@ -158,7 +160,7 @@ export default function FamilyTree() {
             person={selectedPerson}
             personMap={personMap} 
             onClose={() => setSelectedPerson(null)}
-            // onUpdated={fetchTree}
+            onSaved={fetchTree}
           />
         )}
 

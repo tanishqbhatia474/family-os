@@ -12,6 +12,12 @@ export const uploadDocumentService = async (
   file,
   { title, type, viewAccessPersonIds }
 ) => {
+  console.log('=== Upload Service Started ===');
+  console.log('User:', user);
+  console.log('File:', file);
+  console.log('Title:', title, 'Type:', type);
+  console.log('ViewAccessPersonIds:', viewAccessPersonIds);
+
   if (!user.familyId || !user.personId) {
     throw new Error("User does not belong to a family or person");
   }
@@ -38,14 +44,27 @@ export const uploadDocumentService = async (
   const fileExt = file.originalname.split(".").pop();
   const fileKey = `${user.familyId}/${user.personId}/${crypto.randomUUID()}.${fileExt}`;
 
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Key: fileKey,
-      Body: file.buffer,
-      ContentType: file.mimetype
-    })
-  );
+  console.log('S3 Config:', {
+    bucket: process.env.AWS_S3_BUCKET_NAME,
+    region: process.env.AWS_REGION,
+    hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
+    hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY
+  });
+
+  try {
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        Key: fileKey,
+        Body: file.buffer,
+        ContentType: file.mimetype
+      })
+    );
+    console.log('S3 upload successful');
+  } catch (s3Error) {
+    console.error('S3 upload failed:', s3Error);
+    throw s3Error;
+  }
 
   const fileUrl = `s3://${process.env.AWS_S3_BUCKET_NAME}/${fileKey}`;
 
@@ -60,6 +79,7 @@ export const uploadDocumentService = async (
     )
   });
 
+  console.log('Document created:', document._id);
   return document;
 };
 

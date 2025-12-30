@@ -26,7 +26,7 @@ app.use('/api/ritual', ritualRoutes);
 app.use('/api/document', documentRoutes);
 
 //app.use('/api', routes);
-3
+app.use('/api/person', personRoutes);
 // Global error handler
 app.use(errorHandler);
 // Health check

@@ -10,15 +10,15 @@ import {
 
 const router = express.Router();
 
-router.post('/', protect, addPerson);
-router.patch('/:id', protect, editPerson);
+// Specific routes first (before dynamic :id routes)
 router.get('/family', protect, getFamilyPersons);
 router.get('/tree', protect, getFamilyTree);
+
+// Dynamic routes
+router.post('/', protect, addPerson);
+router.patch('/:id', protect, editPerson);
 router.patch('/:childId/set-father', protect, setFather);
-
-// set mother
 router.patch('/:childId/set-mother', protect, setMother);
-
-// add child (same logic, better UX)
 router.patch('/:parentId/add-child', protect, addChild);
+
 export default router;

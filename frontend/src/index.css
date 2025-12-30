@@ -1,12 +1,28 @@
 @import "tailwindcss";
 
-/* Global design tokens */
+/* ---------- Light theme (default) ---------- */
 :root {
-  --bg: #fafafa;        /* off-white */
-  --text: #111111;      /* near-black */
-  --muted: #6b7280;     /* soft gray */
+  --bg: #fafafa;
+  --text: #111111;
+  --muted: #6b7280;
+
+  /* app-specific */
+  --panel: rgba(255, 255, 255, 0.7);
+  --border: rgba(0, 0, 0, 0.08);
+  --accent: #1f3d34; /* your green */
+}
+/* ---------- Dark theme ---------- */
+html.dark {
+  --bg: #0f1f1a;          /* deep green-black */
+  --text: #e5f2ed;        /* soft off-white */
+  --muted: #9ca3af;
+
+  --panel: rgba(24, 39, 33, 0.7);
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #7fb9a5;    /* muted mint */
 }
 
+/* ---------- Global layout ---------- */
 html,
 body,
 #root {
@@ -15,18 +31,21 @@ body,
 
 body {
   font-family: "Inter Variable", Inter, system-ui, sans-serif;
-  background-color: var(--bg);
+  background-color: transparent;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ---------- Tree helpers ---------- */
 .hidden-link {
   stroke: none !important;
 }
 
 .tree-link {
   stroke: rgba(0, 0, 0, 0.35);
-  stroke-width: 1.5;
-  fill: none;
+}
+
+html.dark .tree-link {
+  stroke: rgba(255, 255, 255, 0.35);
 }

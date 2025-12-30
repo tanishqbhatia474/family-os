@@ -6,11 +6,14 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="fixed left-0 top-0 h-screen w-56 px-6 pt-10 z-30
-                 bg-[#114334]/85 text-white"
-      style={{
-        boxShadow: "4px 0 14px rgba(0, 0, 0, 0.25)",
-      }}
+      className="
+        fixed left-0 top-0 h-screen w-56 px-6 pt-10 z-30
+        bg-[#114334]/85 text-white
+
+        /* 👇 CLEAN SEPARATION */
+        border-r border-black/10
+        dark:border-white/10
+      "
     >
       {/* Brand */}
       <div className="text-sm font-medium tracking-tight mb-8 text-white/90">

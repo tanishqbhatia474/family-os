@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
+import { Moon, Sun, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Moon, Sun } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 
-export default function Topbar() {
+export default function FloatingActions() {
   const { setUser } = useAuth();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
@@ -16,31 +16,20 @@ export default function Topbar() {
   };
 
   return (
-    <header
-      className="
-        fixed top-0 left-56 right-0 h-14 px-6
-        flex items-center justify-end gap-3
-        z-20
-
-        bg-[rgb(50,98,84)]
-        border-b border-black/20
-
-        dark:bg-[rgb(22,44,38)]
-        dark:border-white/10
-      "
-    >
+    <div className="fixed top-4 right-6 z-30 flex gap-2">
       {/* Theme toggle */}
       <Button
         variant="outline"
         size="icon"
         onClick={toggleTheme}
         className="
-          w-9 h-9
-          border-white/30
-          bg-white/10
-          text-white
-          hover:bg-white/20
-          transition-colors
+          bg-white/80 text-neutral-800
+          border border-black/10
+          hover:bg-white
+          dark:bg-neutral-900/80
+          dark:text-neutral-100
+          dark:border-white/10
+          dark:hover:bg-neutral-900
         "
         aria-label="Toggle theme"
       >
@@ -54,18 +43,21 @@ export default function Topbar() {
       {/* Logout */}
       <Button
         variant="outline"
-        size="sm"
-        className="
-          border-white/30
-          bg-white/10
-          text-white
-          hover:bg-white/20
-          transition-colors
-        "
+        size="icon"
         onClick={logout}
+        className="
+          bg-white/80 text-neutral-800
+          border border-black/10
+          hover:bg-white
+          dark:bg-neutral-900/80
+          dark:text-neutral-100
+          dark:border-white/10
+          dark:hover:bg-neutral-900
+        "
+        aria-label="Logout"
       >
-        Logout
+        <LogOut className="h-4 w-4" />
       </Button>
-    </header>
+    </div>
   );
 }

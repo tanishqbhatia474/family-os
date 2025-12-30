@@ -46,11 +46,11 @@ export default function FluidBackground({ height = "85vh" }) {
       for (let x = 0; x <= width; x += 6) {
         const nx = x / width;
         const noise =
-          noise3D(nx * 3.2 + mouseX * 0.25, z*1.8, time * speed) *
+          noise3D(nx * 3.2 + mouseX * 0.25, z * 1.8, time * speed) *
           0.5;
 
         const y =
-          heightPx * (0.50 + z * 0.35) +
+          heightPx * (0.5 + z * 0.35) +
           noise * heightPx * 0.12;
 
         ctx.lineTo(x, y);
@@ -67,46 +67,41 @@ export default function FluidBackground({ height = "85vh" }) {
     };
 
     const render = () => {
-      time += 0.003; // global motion speed
-      // try 0.0015 for calmer, 0.003 for more energy
-
+      time += 0.003;
       ctx.clearRect(0, 0, width, heightPx);
 
-      // base warm wash
+      const isDark = document.documentElement.classList.contains("dark");
+
+      /* ---------- BASE WASH ---------- */
       const base = ctx.createLinearGradient(0, 0, width, heightPx);
-      base.addColorStop(0, "#faf6f1");
-      base.addColorStop(1, "#f2ebe3");
+
+      if (isDark) {
+        base.addColorStop(0, "#050807"); // near black
+        base.addColorStop(1, "#0B1411"); // green-black
+      } else {
+        base.addColorStop(0, "#faf6f1");
+        base.addColorStop(1, "#f2ebe3");
+      }
+
       ctx.fillStyle = base;
       ctx.fillRect(0, 0, width, heightPx);
 
-      // layered warm fields
-      // drawLayer("rgb(243, 214, 182)", 0.1, 0.8, 0.45); // sand
-      // drawLayer("rgb(238, 197, 165)", 0.3, 0.6, 0.30); // peach
-      // drawLayer("rgb(227, 173, 132)", 0.5, 0.4, 0.25); // amber
-      // drawLayer("rgb(210, 160, 120)", 0.7, 0.3, 0.20); // deeper warmth
+      /* ---------- LAYERED FIELDS ---------- */
 
-      // drawLayer("rgb(255, 236, 215)", 0.05, 0.9, 0.40); // warm ivory
-      // drawLayer("rgb(245, 210, 170)", 0.30, 0.6, 0.32); // soft apricot
-      // drawLayer("rgb(232, 185, 140)", 0.50, 0.45, 0.25); // honey
-      // drawLayer("rgb(215, 165, 120)", 0.70, 0.3, 0.18); // sun-warm earth
-      
-      // drawLayer("rgb(185, 115, 135)", 0.65, 0.3, 0.22); // deep rose
-      // drawLayer("rgb(210, 145, 165)", 0.45, 0.5, 0.26); // muted rose
-      // drawLayer("rgb(235, 190, 205)", 0.25, 0.7, 0.32); // dusty blush
-      // drawLayer("rgb(250, 225, 230)", 0.05, 0.9, 0.40); // soft blush mist
+      if (!isDark) {
+        drawLayer("rgb(135, 160, 140)", 0.65, 0.3, 0.22);
+        drawLayer("rgb(165, 190, 170)", 0.45, 0.5, 0.26);
+        drawLayer("rgb(205, 225, 210)", 0.25, 0.7, 0.32);
+        drawLayer("rgb(235, 245, 235)", 0.05, 0.9, 0.40);
+      }
 
-      drawLayer("rgb(135, 160, 140)", 0.65, 0.3, 0.22); // deep sage
-      drawLayer("rgb(165, 190, 170)", 0.45, 0.5, 0.26); // muted moss
-      drawLayer("rgb(205, 225, 210)", 0.25, 0.7, 0.32); // soft sage
-      drawLayer("rgb(235, 245, 235)", 0.05, 0.9, 0.40); // pale mint haze
-
-      // drawLayer("rgb(150, 170, 155)", 0.65, 0.3, 0.18);
-      // drawLayer("rgb(180, 200, 185)", 0.45, 0.5, 0.22);
-      // drawLayer("rgb(220, 235, 225)", 0.25, 0.7, 0.28);
-      // drawLayer("rgb(235, 245, 235)", 0.05, 0.9, 0.40);
-
-
-
+      /* ---------- DARK MODE LAYERS ---------- */
+      else {
+        drawLayer("rgb(22, 44, 38)", 0.65, 0.3, 0.18);   // deep black-green
+        drawLayer("rgb(32, 66, 56)", 0.45, 0.5, 0.20);   // forest shadow
+        drawLayer("rgb(50, 98, 84)", 0.25, 0.7, 0.18);   // muted jade
+        drawLayer("rgb(90, 150, 132)", 0.05, 0.9, 0.14); // soft green glow
+      }
 
       if (!prefersReducedMotion) {
         frameRef.current = requestAnimationFrame(render);

@@ -30,6 +30,7 @@ export default function FloatingActions() {
           dark:text-neutral-100
           dark:border-white/10
           dark:hover:bg-neutral-900
+          cursor-pointer
         "
         aria-label="Toggle theme"
       >
@@ -53,6 +54,7 @@ export default function FloatingActions() {
           dark:text-neutral-100
           dark:border-white/10
           dark:hover:bg-neutral-900
+          cursor-pointer
         "
         aria-label="Logout"
       >

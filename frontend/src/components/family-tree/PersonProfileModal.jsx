@@ -61,6 +61,7 @@ export default function PersonProfileModal({
               w-full py-2 rounded-md text-sm font-medium
               bg-[#1F3D34] text-white
               hover:bg-[#183128]
+              cursor-pointer
             "
           >
             Edit Details
@@ -78,6 +79,7 @@ export default function PersonProfileModal({
             dark:border-neutral-700
             dark:text-neutral-300
             dark:hover:bg-neutral-800
+            cursor-pointer
           "
         >
           Close
@@ -86,10 +88,18 @@ export default function PersonProfileModal({
         {showEdit && (
           <EditPersonModal
             person={person}
-            onClose={() => setShowEdit(false)}
-            onSaved={onSaved}
+            onClose={() => {
+              setShowEdit(false);
+              onClose(); // 🔥 CLOSE PROFILE TOO
+            }}
+            onSaved={async () => {
+              if (onSaved) await onSaved(); // 🔥 REFRESH TREE & PERSONMAP
+              setShowEdit(false);
+              onClose();       // 🔥 CLOSE PROFILE
+            }}
           />
         )}
+
       </div>
     </div>
   );

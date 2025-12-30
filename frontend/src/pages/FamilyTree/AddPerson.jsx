@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { addPerson, getFamilyPersons } from "../../api/person.api";
 import { useAuth } from "../../context/AuthContext";
+import { toast } from "sonner";
 
 export default function AddPerson({ onPersonAdded }) {
   const { user } = useAuth();
@@ -9,12 +10,12 @@ export default function AddPerson({ onPersonAdded }) {
   if (!user?.isHonor) return null;
 
   const [persons, setPersons] = useState([]);
+
   const [name, setName] = useState("");
+  const [gender, setGender] = useState(""); // REQUIRED
+  const [birthDate, setBirthDate] = useState(""); // OPTIONAL
   const [fatherId, setFatherId] = useState("");
   const [motherId, setMotherId] = useState("");
-
-  // NEW
-  const [gender, setGender] = useState("");
   const [isDeceased, setIsDeceased] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -29,28 +30,40 @@ export default function AddPerson({ onPersonAdded }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!gender) {
+      setError("Please select gender");
+      return;
+    }
+
     setLoading(true);
 
     try {
       await addPerson({
         name,
-        gender,
+        gender: gender.toLowerCase(), // 🔑 frontend → backend conversion
+        birthDate: birthDate || undefined,
         isDeceased,
         fatherId: fatherId || null,
         motherId: motherId || null
       });
 
-      // reset form
+      toast.success("Family member added", {
+        description: `${name} has been added to the family tree`
+      });
+
+      // Reset form
       setName("");
+      setGender("");
+      setBirthDate("");
       setFatherId("");
       setMotherId("");
-      setGender("");
       setIsDeceased(false);
 
-      // refresh tree
+      // Refresh tree
       await onPersonAdded();
 
-      // refresh local list
+      // Refresh dropdowns
       const res = await getFamilyPersons();
       setPersons(res.data);
 
@@ -65,11 +78,13 @@ export default function AddPerson({ onPersonAdded }) {
     <div className="max-w-xl space-y-4">
       <h2 className="text-lg font-semibold">Add Family Member</h2>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <p className="text-sm text-red-500">{error}</p>
+      )}
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* Name */}
+        {/* Name — REQUIRED */}
         <input
           placeholder="Full name"
           className="w-full border px-3 py-2 rounded"
@@ -78,44 +93,47 @@ export default function AddPerson({ onPersonAdded }) {
           required
         />
 
-        {/* Gender */}
+        {/* Gender — REQUIRED */}
         <div className="space-y-1">
-          <label className="text-sm font-medium text-neutral-700">
-            Gender
+          <label className="text-sm font-medium">
+            Gender <span className="text-red-500">*</span>
           </label>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="radio"
-                name="gender"
-                value="Male"
-                checked={gender === "Male"}
-                onChange={() => setGender("Male")}
-                required
-              />
-              Male
-            </label>
 
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="radio"
-                name="gender"
-                value="Female"
-                checked={gender === "Female"}
-                onChange={() => setGender("Female")}
-                required
-              />
-              Female
-            </label>
+          <div className="flex gap-6">
+            {["Male", "Female", "Other"].map(opt => (
+              <label key={opt} className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="gender"
+                  value={opt}
+                  checked={gender === opt}
+                  onChange={() => setGender(opt)}
+                  required
+                />
+                {opt}
+              </label>
+            ))}
           </div>
         </div>
 
-        {/* Father */}
+        {/* DOB — OPTIONAL */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium">
+            Date of Birth (optional)
+          </label>
+          <input
+            type="date"
+            className="w-full border px-3 py-2 rounded bg-transparent text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100 dark:[&::-webkit-calendar-picker-indicator]:invert"
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
+          />
+        </div>
+
+        {/* Father — OPTIONAL */}
         <select
           className="w-full border px-3 py-2 rounded"
           value={fatherId}
           onChange={(e) => setFatherId(e.target.value)}
-          disabled={isDeceased}
         >
           <option value="">Select father (optional)</option>
           {persons.map(p => (
@@ -125,12 +143,11 @@ export default function AddPerson({ onPersonAdded }) {
           ))}
         </select>
 
-        {/* Mother */}
+        {/* Mother — OPTIONAL */}
         <select
           className="w-full border px-3 py-2 rounded"
           value={motherId}
           onChange={(e) => setMotherId(e.target.value)}
-          disabled={isDeceased}
         >
           <option value="">Select mother (optional)</option>
           {persons.map(p => (
@@ -153,7 +170,7 @@ export default function AddPerson({ onPersonAdded }) {
         {/* Submit */}
         <button
           disabled={loading}
-          className="w-full bg-black text-white py-2 rounded"
+          className="w-full bg-black text-white py-2 rounded disabled:opacity-60"
         >
           {loading ? "Adding..." : "Add Person"}
         </button>

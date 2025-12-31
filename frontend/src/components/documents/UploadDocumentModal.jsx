@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { uploadDocument } from "../../api/document.api";
 import { getFamilyPersons } from "../../api/person.api";
+import { toast } from "sonner";
 
 export default function UploadDocumentModal({ onClose, onUploaded }) {
   const [title, setTitle] = useState("");
@@ -35,12 +36,14 @@ export default function UploadDocumentModal({ onClose, onUploaded }) {
         formData.append("viewAccessPersonIds", id)
       );
       await uploadDocument(formData);
-
+      toast.success("Document uploaded", {
+        description: "Available to selected family members",
+      });
       onUploaded();
       onClose();
     } catch (err) {
     console.error("Upload failed:", err);
-
+    
     let message = "Upload failed";
 
     if (err.response?.data) {
@@ -55,7 +58,10 @@ export default function UploadDocumentModal({ onClose, onUploaded }) {
       message = err.message;
     }
 
-    alert(message);
+    toast.error("Upload failed", {
+      description: message,
+    });
+
   } finally {
     setLoading(false);
   }

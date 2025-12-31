@@ -114,7 +114,8 @@ export const getSignedDownloadUrlService = async (user, documentId) => {
 
   const command = new GetObjectCommand({
     Bucket: process.env.AWS_S3_BUCKET_NAME,
-    Key: key
+    Key: key,
+    ResponseContentDisposition: `attachment; filename="${document.title || 'document'}"`
   });
 
   // Signed URL valid for 5 minutes

@@ -14,11 +14,19 @@ export default function Documents() {
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
 
+  /* ---------- FETCH ---------- */
+
   const fetchDocuments = async () => {
     try {
       setLoading(true);
       const res = await listDocuments();
+
+      console.log("📄 RAW DOCUMENTS FROM API:", res.data);
+      console.log("👤 LOGGED IN USER:", user);
+
       setDocuments(res.data);
+    } catch (err) {
+      console.error("❌ listDocuments failed:", err);
     } finally {
       setLoading(false);
     }
@@ -28,36 +36,62 @@ export default function Documents() {
     fetchDocuments();
   }, []);
 
-  /* ---------- Actions ---------- */
+  /* ---------- ACTIONS ---------- */
 
   const handleDownload = async (id) => {
+    console.log("⬇️ View clicked for document:", id);
     const res = await getDownloadUrl(id);
+    console.log("🔗 Signed URL:", res.data.url);
     window.open(res.data.url, "_blank");
   };
 
   const handleDelete = async (id) => {
+    console.log("🗑️ Delete clicked for document:", id);
     if (!confirm("Delete this document permanently?")) return;
     await deleteDocument(id);
     fetchDocuments();
   };
 
-  /* ---------- Split Docs ---------- */
+  /* ---------- DEBUG SPLIT ---------- */
 
-  const myDocuments = documents.filter(
-    d => d.ownerPersonId === user.personId
-  );
+  const myDocuments = documents.filter(d => {
+    console.log("---- CHECK MY DOC ----");
+    console.log("doc._id:", d._id);
+    console.log("doc.ownerPersonId:", d.ownerPersonId);
+    console.log("user.personId:", user.personId);
 
-  const sharedDocuments = documents.filter(
-    d => d.ownerPersonId !== user.personId
-  );
+    const ownerId =
+      typeof d.ownerPersonId === "object"
+        ? d.ownerPersonId._id
+        : d.ownerPersonId;
+
+    console.log("normalized ownerId:", ownerId);
+    console.log(
+      "MATCH:",
+      String(ownerId) === String(user.personId)
+    );
+
+    return String(ownerId) === String(user.personId);
+  });
+
+  const sharedDocuments = documents.filter(d => {
+    const ownerId =
+      typeof d.ownerPersonId === "object"
+        ? d.ownerPersonId._id
+        : d.ownerPersonId;
+
+    return String(ownerId) !== String(user.personId);
+  });
+
+  console.log("✅ MY DOCUMENTS:", myDocuments);
+  console.log("🤝 SHARED DOCUMENTS:", sharedDocuments);
 
   /* ---------- UI ---------- */
 
   return (
-    <div className="space-y-10">
+    <div className="relative z-10 space-y-10">
 
-      {/* Header */}
-      <div className="flex justify-between items-center mt-6">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-xl font-medium">Documents</h1>
           <p className="text-sm opacity-70">
@@ -115,7 +149,6 @@ export default function Documents() {
         </>
       )}
 
-      {/* Upload Modal */}
       {showUploadModal && (
         <UploadDocumentModal
           onClose={() => setShowUploadModal(false)}
@@ -146,13 +179,20 @@ function DocumentGrid({ children }) {
 }
 
 function DocumentCard({ doc, onView, onDelete, isOwner }) {
+  console.log(
+    "🧩 RENDER CARD:",
+    doc._id,
+    "isOwner:",
+    isOwner
+  );
+
   return (
-    <div className="border rounded-lg p-4 space-y-3 bg-white dark:bg-neutral-900 dark:border-neutral-700">
+    <div className="card-bg border rounded-lg p-4 space-y-3">
       <div>
-        <h3 className="text-sm font-medium truncate">
+        <h3 className="card-title text-[0.95rem] font-medium truncate">
           {doc.title || "Untitled Document"}
         </h3>
-        <p className="text-xs opacity-70">
+        <p className="card-meta text-xs">
           Uploaded on {new Date(doc.createdAt).toLocaleDateString()}
         </p>
       </div>
@@ -160,7 +200,7 @@ function DocumentCard({ doc, onView, onDelete, isOwner }) {
       <div className="flex justify-between items-center">
         <button
           onClick={onView}
-          className="text-sm text-[#5A9684] hover:underline"
+          className="card-link text-sm font-medium"
         >
           View
         </button>
@@ -168,7 +208,7 @@ function DocumentCard({ doc, onView, onDelete, isOwner }) {
         {isOwner && (
           <button
             onClick={onDelete}
-            className="text-sm text-red-600 hover:underline"
+            className="card-link delete text-sm font-medium"
           >
             Delete
           </button>
@@ -179,7 +219,5 @@ function DocumentCard({ doc, onView, onDelete, isOwner }) {
 }
 
 function Empty({ text }) {
-  return (
-    <p className="text-sm opacity-70">{text}</p>
-  );
+  return <p className="text-sm opacity-70">{text}</p>;
 }

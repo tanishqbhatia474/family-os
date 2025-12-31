@@ -24,17 +24,11 @@ export default function PersonProfileModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="
-          w-[420px]
-          rounded-xl p-6 space-y-5
-          bg-white text-neutral-900
-          dark:bg-[#0f1f1a] dark:text-neutral-100
-          shadow-xl
-        "
+        className="rounded-xl p-6 space-y-5 card-bg modal shadow-xl"
       >
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-medium">{person.name}</h2>
+          <h2 className="card-title text-lg truncate">{person.name}</h2>
           <button
             onClick={onClose}
             className="text-neutral-400 hover:text-neutral-700 dark:hover:text-white"
@@ -70,17 +64,8 @@ export default function PersonProfileModal({
 
         <button
           onClick={onClose}
-          className="
-            w-full py-2 rounded-md text-sm
-            border border-neutral-300
-            text-neutral-700
-            hover:bg-neutral-100
-
-            dark:border-neutral-700
-            dark:text-neutral-300
-            dark:hover:bg-neutral-800
-            cursor-pointer
-          "
+          className="card-link w-full py-2 rounded-md text-sm border border-transparent cursor-pointer no-underline"
+          style={{ textDecoration: 'none' }}
         >
           Close
         </button>
@@ -109,9 +94,7 @@ export default function PersonProfileModal({
 function Section({ title, children }) {
   return (
     <div className="space-y-2">
-      <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-400">
-        {title}
-      </h3>
+      <h3 className="section-label">{title}</h3>
       <div className="space-y-1">{children}</div>
     </div>
   );
@@ -120,20 +103,8 @@ function Section({ title, children }) {
 function Row({ label, value, lightText }) {
   return (
     <div className="flex justify-between text-sm">
-      <span className={
-        lightText
-          ? "text-neutral-600 dark:text-neutral-400"
-          : "text-neutral-500 dark:text-neutral-400"
-      }>
-        {label}
-      </span>
-      <span className={
-        lightText
-          ? "font-medium text-neutral-900 dark:text-neutral-100"
-          : "font-medium text-neutral-900 dark:text-neutral-100"
-      }>
-        {value}
-      </span>
+      <span className="row-label">{label}</span>
+      <span className="row-value">{value}</span>
     </div>
   );
 }

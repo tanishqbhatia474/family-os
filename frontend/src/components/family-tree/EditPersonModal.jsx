@@ -68,21 +68,16 @@ const handleSave = async () => {
   }
 };
 
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
       <div
-        className="
-          w-[420px]
-          rounded-xl p-6 space-y-5
-          bg-white text-neutral-900
-          dark:bg-[#0f1f1a] dark:text-neutral-100
-          shadow-xl
-        "
+        className="card-bg edit-modal rounded-xl p-6 space-y-5 shadow-xl"
       >
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-medium">Edit Person</h3>
+          <h3 className="card-title text-lg truncate">
+            Edit Person
+          </h3>
           <button
             onClick={onClose}
             className="text-neutral-400 hover:text-neutral-700 dark:hover:text-white"
@@ -128,9 +123,8 @@ const handleSave = async () => {
             ))}
         </Select>
 
-
         {/* Deceased */}
-        <label className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+        <label className="flex items-center gap-2 text-sm card-meta">
           <input
             type="checkbox"
             checked={isDeceased}
@@ -143,14 +137,9 @@ const handleSave = async () => {
         <div className="flex justify-end gap-3 pt-3">
           <button
             onClick={onClose}
-            className="
-              text-sm text-neutral-600
-              hover:text-neutral-900
-              dark:text-neutral-400 dark:hover:text-neutral-100
-              transition-colors
-              cursor-pointer
-            "
+            className="card-link no-underline text-sm cursor-pointer"
             type="button"
+            style={{ textDecoration: 'none' }}
           >
             Cancel
           </button>
@@ -158,14 +147,7 @@ const handleSave = async () => {
           <button
             onClick={handleSave}
             disabled={loading}
-            className="
-              bg-[#1F3D34] text-white
-              px-4 py-2 rounded-md text-sm
-              hover:bg-[#183128]
-              disabled:opacity-60
-              transition-colors
-              cursor-pointer
-            "
+            className="bg-[#357a5b] text-white px-4 py-2 rounded-md text-sm hover:bg-[#285c46] disabled:opacity-60 transition-colors cursor-pointer"
             type="button"
           >
             Save
@@ -186,8 +168,8 @@ function Input({ value, onChange }) {
       className="
         w-full rounded-md px-3 py-2 text-sm
         border border-neutral-300
-        bg-white text-neutral-900
-        focus:outline-none focus:ring-2 focus:ring-[#1F3D34]/30
+        bg-[#eaf4ee] text-[#183128]
+        focus:outline-none focus:ring-2 focus:ring-[#357a5b]/30
         dark:border-neutral-700
         dark:bg-neutral-900 dark:text-neutral-100
       "
@@ -203,8 +185,8 @@ function Select({ value, onChange, children }) {
       className="
         w-full rounded-md px-3 py-2 text-sm
         border border-neutral-300
-        bg-white text-neutral-900
-        focus:outline-none focus:ring-2 focus:ring-[#5A9684]/40
+        bg-[#eaf4ee] text-[#183128]
+        focus:outline-none focus:ring-2 focus:ring-[#357a5b]/30
         dark:border-neutral-700
         dark:bg-neutral-900 dark:text-neutral-100
       "

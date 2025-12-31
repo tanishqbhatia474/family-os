@@ -49,3 +49,112 @@ body {
 html.dark .tree-link {
   stroke: rgba(255, 255, 255, 0.35);
 }
+
+/* ---------- Card background for Documents ---------- */
+.card-bg {
+  background-color: #dbe9df; /* matches FluidBackground's lightest field */
+  color: #183128; /* deep green for good contrast on light bg */
+  border: 1px solid #357a5b; /* dark green border in light mode */
+}
+html.dark .card-bg {
+  background-color: #000;
+  color: #e5f2ed; /* soft off-white for dark bg */
+  border: 1px solid #b2cfc3; /* keep dark border in dark mode */
+}
+
+/* Large modals only */
+.card-bg.modal {
+  min-width: 440px;
+  max-width: 440px;
+  min-height: 480px;
+  max-height: 90vh;
+}
+
+.card-bg.edit-modal {
+  min-width: 440px;
+  max-width: 440px;
+  min-height: 480px;
+  max-height: 90vh;
+  z-index: 60;
+}
+
+/* Card text overrides for accessibility and contrast */
+.card-bg .card-title {
+  color: #183128; /* deep green for title in light mode */
+  font-weight: 600;
+}
+html.dark .card-bg .card-title {
+  color: #e5f2ed;
+}
+
+.card-bg .card-meta {
+  color: #357a5b; /* accessible green for meta in light mode */
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+html.dark .card-bg .card-meta {
+  color: #b2cfc3;
+}
+
+.card-bg .card-link {
+  color: #357a5b; /* accessible green for links in light mode */
+  font-weight: 500;
+  text-decoration: none;
+}
+.card-bg .card-link:hover {
+  text-decoration: underline;
+}
+html.dark .card-bg .card-link {
+  color: #7fb9a5;
+}
+
+.card-bg .card-link.no-underline {
+  text-decoration: none !important;
+}
+
+.card-bg .card-link.delete {
+  color: #c0392b; /* accessible red for delete in light mode */
+}
+html.dark .card-bg .card-link.delete {
+  color: #ff7675;
+}
+
+.card-bg .section-label {
+  color: #357a5b;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.card-bg .row-label {
+  color: #5a6e63;
+  font-size: 0.97rem;
+}
+
+.card-bg .row-value {
+  color: #183128;
+  font-weight: 600;
+  font-size: 0.97rem;
+}
+html.dark .card-bg .row-value {
+  color: #e5f2ed;
+}
+
+.card-bg input,
+.card-bg select {
+  background-color: #eaf4ee !important;
+  color: #183128 !important;
+  border: 1px solid #357a5b !important;
+  font-size: 1rem;
+  font-family: inherit;
+}
+html.dark .card-bg input,
+html.dark .card-bg select {
+  background-color: #181f1a !important;
+  color: #e5f2ed !important;
+  border: 1px solid #b2cfc3 !important;
+}
+.card-bg input:focus,
+.card-bg select:focus {
+  outline: 2px solid #357a5b;
+  outline-offset: 1px;
+}

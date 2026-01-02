@@ -66,9 +66,9 @@ export const createFamilyService = async (user, { familyName, personName }) => {
 };
 
 /* ===============================
-   JOIN FAMILY
+   JOIN FAMILY (SILENT MATCHING)
 ================================ */
-export const joinFamilyService = async (user, { inviteCode, personName }) => {
+export const joinFamilyService = async (user, { inviteCode, personName, birthDate }) => {
   // 1️⃣ Hard check: user must not already be in a family
   if (user.familyId || user.personId) {
     throw new Error(
@@ -82,15 +82,48 @@ export const joinFamilyService = async (user, { inviteCode, personName }) => {
     throw new Error('Invalid or expired invite code');
   }
 
-  // 3️⃣ Create person for this user
-  const person = await Person.create({
-    familyId: family._id,
-    name: personName,
-    fatherId: null,
-    motherId: null
-  });
+  let person;
 
-  // 4️⃣ Update user
+  // 3️⃣ TRY SILENT MATCHING: Find person by name + DOB
+  if (personName && birthDate) {
+    const matches = await Person.find({
+      familyId: family._id,
+      name: personName,
+      birthDate: new Date(birthDate)
+    });
+
+    if (matches.length > 1) {
+      throw new Error('Multiple people with this name and DOB. Please contact family admin.');
+    }
+
+    if (matches.length === 1) {
+      // Check if already linked
+      const existingUser = await User.findOne({ personId: matches[0]._id });
+      if (existingUser) {
+        throw new Error('This person is already linked to another account');
+      }
+      
+      person = matches[0];
+      // ✨ Silent match found!
+    }
+  }
+
+  // 4️⃣ IF NO MATCH: Create new person
+  if (!person) {
+    if (!personName) {
+      throw new Error('Person name is required');
+    }
+
+    person = await Person.create({
+      familyId: family._id,
+      name: personName,
+      birthDate: birthDate ? new Date(birthDate) : null,
+      fatherId: null,
+      motherId: null
+    });
+  }
+
+  // 5️⃣ Update user
   const updatedUser = await User.findByIdAndUpdate(
     user.userId,
     {
@@ -101,7 +134,7 @@ export const joinFamilyService = async (user, { inviteCode, personName }) => {
     { new: true }
   );
 
-  // 5️⃣ Re-issue JWT (IMPORTANT)
+  // 6️⃣ Re-issue JWT (IMPORTANT)
   const token = jwt.sign(
     {
       userId: updatedUser._id,

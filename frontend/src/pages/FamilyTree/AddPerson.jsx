@@ -127,6 +127,15 @@ export default function AddPerson({ onPersonAdded }) {
           </div>
         </div>
 
+        {/* Birth Date (REQUIRED now) */}
+        <input
+          type="date"
+          className="w-full border px-3 py-2 rounded"
+          value={birthDate}
+          onChange={(e) => setBirthDate(e.target.value)}
+          required
+        />
+
         {/* Father */}
         <select
           className="w-full border px-3 py-2 rounded"

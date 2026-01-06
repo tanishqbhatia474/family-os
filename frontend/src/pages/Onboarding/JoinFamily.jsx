@@ -9,33 +9,31 @@ export default function JoinFamily() {
 
   const [inviteCode, setInviteCode] = useState("");
   const [personName, setPersonName] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [gender, setGender] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     try {
       await http.post("/family/join", {
         inviteCode,
         personName,
+        birthDate,
+        gender
       });
 
       toast.success("Joined family", {
-        description: "Please log in again to continue.",
+        description: "Please log in again to continue."
       });
 
       localStorage.removeItem("token");
-
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       toast.error("Failed to join family", {
-        description:
-          err.response?.data?.message || "Invalid invite code",
+        description: err.response?.data?.message || "Invalid invite code"
       });
     } finally {
       setLoading(false);
@@ -68,33 +66,64 @@ export default function JoinFamily() {
         <div className="space-y-3">
           <input
             placeholder="Invite code"
-            className="
-              w-full rounded-md px-3 py-2
-              border border-neutral-300
-              bg-white/80
-              text-sm
-              focus:outline-none
-              focus:ring-2 focus:ring-[#1F3D34]/30
-            "
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value)}
             required
+            className="
+              w-full rounded-md px-3 py-2
+              border border-neutral-300
+              bg-white/80 text-sm
+              focus:outline-none
+              focus:ring-2 focus:ring-[#1F3D34]/30
+            "
           />
 
           <input
             placeholder="Your full name"
-            className="
-              w-full rounded-md px-3 py-2
-              border border-neutral-300
-              bg-white/80
-              text-sm
-              focus:outline-none
-              focus:ring-2 focus:ring-[#1F3D34]/30
-            "
             value={personName}
             onChange={(e) => setPersonName(e.target.value)}
             required
+            className="
+              w-full rounded-md px-3 py-2
+              border border-neutral-300
+              bg-white/80 text-sm
+              focus:outline-none
+              focus:ring-2 focus:ring-[#1F3D34]/30
+            "
           />
+
+          <input
+            type="date"
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
+            required
+            className="
+              w-full rounded-md px-3 py-2
+              border border-neutral-300
+              bg-white/80 text-sm
+              focus:outline-none
+              focus:ring-2 focus:ring-[#1F3D34]/30
+            "
+          />
+
+          <select
+            value={gender}
+            onChange={(e) => setGender(e.target.value)}
+            className="
+              w-full rounded-md px-3 py-2
+              border border-neutral-300
+              bg-white/80 text-sm
+              focus:outline-none
+              focus:ring-2 focus:ring-[#1F3D34]/30
+            "
+          >
+            <option value="" disabled>
+              Select gender
+            </option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
         </div>
 
         <button

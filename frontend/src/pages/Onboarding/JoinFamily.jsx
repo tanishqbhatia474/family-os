@@ -15,6 +15,28 @@ export default function JoinFamily() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 🔒 Frontend validation
+    if (!inviteCode.trim()) {
+      toast.error("Invite code is required");
+      return;
+    }
+
+    if (!personName.trim()) {
+      toast.error("Your full name is required");
+      return;
+    }
+
+    if (!birthDate) {
+      toast.error("Birth date is required");
+      return;
+    }
+
+    if (!gender) {
+      toast.error("Please select your gender");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -39,6 +61,7 @@ export default function JoinFamily() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="relative min-h-screen flex items-center justify-center">

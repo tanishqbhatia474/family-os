@@ -15,6 +15,28 @@ export default function CreateFamily() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 🔒 Frontend validation
+    if (!familyName.trim()) {
+      toast.error("Family name is required");
+      return;
+    }
+
+    if (!personName.trim()) {
+      toast.error("Your full name is required");
+      return;
+    }
+
+    if (!birthDate) {
+      toast.error("Birth date is required");
+      return;
+    }
+
+    if (!gender) {
+      toast.error("Please select your gender");
+      return;
+    }
+
     setLoading(true);
 
     try {

@@ -55,4 +55,17 @@ const personSchema = new mongoose.Schema(
   }
 );
 
+// 🔒 COMPOUND UNIQUE INDEX: Prevent duplicate persons
+// Fields: familyId, name, birthDate, gender
+// This guarantees zero duplicates even under race conditions
+personSchema.index(
+  {
+    familyId: 1,
+    name: 1,
+    birthDate: 1,
+    gender: 1
+  },
+  { unique: true }
+);
+
 export default mongoose.model('Person', personSchema);

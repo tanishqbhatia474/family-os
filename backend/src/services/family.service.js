@@ -3,16 +3,33 @@ import Person from '../models/Person.model.js';
 import User from '../models/User.model.js';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import { normalizeName } from '../utils/name.util.js';
+import { getUTCDayRange } from '../utils/date.util.js';
+import { AppError } from '../utils/AppError.js';
+import { findMatchingPerson } from '../utils/identity.util.js';
 
 /* ===============================
    CREATE FAMILY
 ================================ */
-export const createFamilyService = async (user, { familyName, personName }) => {
+export const createFamilyService = async (user, { familyName, personName, gender, birthDate }) => {
   // 1️⃣ Hard check: user must not already be in a family
   if (user.familyId || user.personId) {
     throw new Error(
       'You already belong to a family. You cannot create another one.'
     );
+  }
+
+  // 🔒 ENFORCE REQUIRED IDENTITY FIELDS FOR FAMILY CREATOR
+  if (!personName || !personName.trim()) {
+    throw new Error('Your name is required');
+  }
+
+  if (!gender) {
+    throw new Error('Gender is required');
+  }
+
+  if (!birthDate) {
+    throw new Error('Birth date is required');
   }
 
   // 2️⃣ Generate invite code
@@ -28,7 +45,9 @@ export const createFamilyService = async (user, { familyName, personName }) => {
   // 4️⃣ Create first person (family owner)
   const person = await Person.create({
     familyId: family._id,
-    name: personName,
+    name: normalizeName(personName),
+    gender,
+    birthDate,
     fatherId: null,
     motherId: null
   });
@@ -68,12 +87,25 @@ export const createFamilyService = async (user, { familyName, personName }) => {
 /* ===============================
    JOIN FAMILY (SILENT MATCHING)
 ================================ */
-export const joinFamilyService = async (user, { inviteCode, personName, birthDate }) => {
+export const joinFamilyService = async (user, { inviteCode, personName, gender, birthDate }) => {
   // 1️⃣ Hard check: user must not already be in a family
   if (user.familyId || user.personId) {
     throw new Error(
       'You already belong to a family. You cannot join another family.'
     );
+  }
+
+  // 🔒 ENFORCE REQUIRED IDENTITY FIELDS
+  if (!personName || !personName.trim()) {
+    throw new Error('Your name is required');
+  }
+
+  if (!gender) {
+    throw new Error('Gender is required');
+  }
+
+  if (!birthDate) {
+    throw new Error('Birth date is required');
   }
 
   // 2️⃣ Validate invite code
@@ -84,43 +116,68 @@ export const joinFamilyService = async (user, { inviteCode, personName, birthDat
 
   let person;
 
-  // 3️⃣ TRY SILENT MATCHING: Find person by name + DOB
-  if (personName && birthDate) {
-    const matches = await Person.find({
-      familyId: family._id,
-      name: personName,
-      birthDate: new Date(birthDate)
-    });
+  // 3️⃣ TRY SILENT MATCHING: Use centralized identity matching (SINGLE SOURCE OF TRUTH)
+  person = await findMatchingPerson(family._id, personName, birthDate, gender);
 
-    if (matches.length > 1) {
-      throw new Error('Multiple people with this name and DOB. Please contact family admin.');
+  if (person) {
+    // 🔒 CHECK DOUBLE LINKAGE: Prevent two accounts from linking to same person
+    const existingUser = await User.findOne({ personId: person._id });
+    if (existingUser) {
+      throw new AppError(
+        'This person is already linked to another account. Each person can only belong to one user.',
+        409,
+        'PERSON_ALREADY_LINKED'
+      );
     }
-
-    if (matches.length === 1) {
-      // Check if already linked
-      const existingUser = await User.findOne({ personId: matches[0]._id });
-      if (existingUser) {
-        throw new Error('This person is already linked to another account');
-      }
-      
-      person = matches[0];
-      // ✨ Silent match found!
-    }
+    // ✨ Silent match found! Will use this person below
   }
 
   // 4️⃣ IF NO MATCH: Create new person
   if (!person) {
-    if (!personName) {
-      throw new Error('Person name is required');
-    }
+    try {
+      person = await Person.create({
+        familyId: family._id,
+        name: normalizeName(personName),
+        gender,
+        birthDate: new Date(birthDate),
+        fatherId: null,
+        motherId: null
+      });
+    } catch (err) {
+      // 🔒 HANDLE DB UNIQUE INDEX VIOLATION (race condition safety)
+      if (err.code === 11000) {
+        // Re-query to find the person that was created (another request beat us)
+        const raceConditionMatch = await Person.findOne({
+          familyId: family._id,
+          name: normalizeName(personName),
+          birthDate: getUTCDayRange(birthDate),
+          gender: gender
+        });
 
-    person = await Person.create({
-      familyId: family._id,
-      name: personName,
-      birthDate: birthDate ? new Date(birthDate) : null,
-      fatherId: null,
-      motherId: null
-    });
+        if (raceConditionMatch) {
+          // Check if this person is already linked
+          const existingUser = await User.findOne({ personId: raceConditionMatch._id });
+          if (existingUser) {
+            throw new AppError(
+              'This person is already linked to another account. Each person can only belong to one user.',
+              409,
+              'PERSON_ALREADY_LINKED'
+            );
+          }
+          
+          person = raceConditionMatch;
+        } else {
+          // Should not happen, but fallback to generic error
+          throw new AppError(
+            'A person with this name, birth date, and gender already exists in your family',
+            409,
+            'DUPLICATE_PERSON'
+          );
+        }
+      } else {
+        throw err;
+      }
+    }
   }
 
   // 5️⃣ Update user

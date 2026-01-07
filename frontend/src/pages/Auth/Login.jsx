@@ -32,25 +32,24 @@ export default function Login() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center">
-      {/* Background */}
       <FluidBackground />
 
-      {/* Login panel */}
       <form
         onSubmit={handleSubmit}
         className="
           relative z-10 w-full max-w-sm
-          bg-white/70 backdrop-blur-md
+          backdrop-blur-md
           rounded-xl px-8 py-10
           shadow-lg shadow-black/5
           space-y-6
         "
+        style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}
       >
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-medium tracking-tight">
             Log in
           </h1>
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm" style={{ color: "var(--muted)" }}>
             Welcome back to your family space
           </p>
         </div>
@@ -65,33 +64,21 @@ export default function Login() {
           <input
             type="email"
             placeholder="Email"
-            className="
-              w-full rounded-md px-3 py-2
-              border border-neutral-300
-              bg-white/80
-              text-sm
-              focus:outline-none
-              focus:ring-2 focus:ring-[#1F3D34]/30
-            "
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            className="w-full rounded-md px-3 py-2 border bg-transparent text-sm focus:outline-none"
+            style={{ borderColor: "var(--border)", color: "var(--text)" }}
           />
 
           <input
             type="password"
             placeholder="Password"
-            className="
-              w-full rounded-md px-3 py-2
-              border border-neutral-300
-              bg-white/80
-              text-sm
-              focus:outline-none
-              focus:ring-2 focus:ring-[#1F3D34]/30
-            "
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            className="w-full rounded-md px-3 py-2 border bg-transparent text-sm focus:outline-none"
+            style={{ borderColor: "var(--border)", color: "var(--text)" }}
           />
         </div>
 
@@ -100,20 +87,22 @@ export default function Login() {
           disabled={loading}
           className="
             w-full rounded-md py-2 text-sm font-medium
-            bg-[#1F3D34] text-white
-            hover:bg-[#183128]
-            transition-colors
-            disabled:opacity-60
+            transition-colors disabled:opacity-60
           "
+          style={{
+            backgroundColor: "var(--accent)",
+            color: "white"
+          }}
         >
           {loading ? "Logging in..." : "Log in"}
         </button>
 
-        <p className="text-sm text-center text-neutral-600">
+        <p className="text-sm text-center" style={{ color: "var(--muted)" }}>
           Don’t have an account?{" "}
           <Link
             to="/signup"
-            className="text-[#1F3D34] font-medium hover:underline"
+            className="font-medium hover:underline"
+            style={{ color: "var(--accent)" }}
           >
             Sign up
           </Link>

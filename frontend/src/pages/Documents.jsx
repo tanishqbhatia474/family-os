@@ -3,6 +3,7 @@ import UploadDocumentModal from "../components/documents/UploadDocumentModal";
 import {
   listDocuments,
   getDownloadUrl,
+  getViewUrl,
   deleteDocument
 } from "../api/document.api";
 import { useAuth } from "../context/AuthContext";
@@ -36,15 +37,26 @@ export default function Documents() {
 
   const handleView = async (doc) => {
     try {
-      const res = await getDownloadUrl(doc._id);
-      window.open(res.data.url, "_blank");
-      toast.info("Opened document", {
-        description: "Link valid for 5 minutes",
-      });
+      const res = await getViewUrl(doc._id);
+
+      // cloud storage case
+      if (res.data?.url) {
+        window.open(res.data.url, "_blank");
+        return;
+      }
+
+      // local storage case
+      window.open(
+        `${import.meta.env.VITE_API_URL}/document/${doc._id}/view`,
+        "_blank"
+      );
+
+      toast.info("Opened document");
     } catch {
       toast.error("Failed to open document");
     }
   };
+
 
   const handleDownload = async (doc) => {
     try {
@@ -57,7 +69,7 @@ export default function Documents() {
       document.body.removeChild(link);
 
       toast.success("Download started", {
-        description: "Link valid for 5 minutes",
+        duration: 1000,
       });
     } catch {
       toast.error("Download failed");
@@ -143,7 +155,12 @@ export default function Documents() {
 
           <button
             onClick={() => setShowUploadModal(true)}
-            className="bg-[#5A9684] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#4C7F70]"
+            className="
+              px-4 py-2 rounded-lg text-sm font-medium
+              text-[var(--bg)]
+              hover:opacity-90
+            "
+            style={{ backgroundColor: "var(--accent)" }}
           >
             Upload Document
           </button>

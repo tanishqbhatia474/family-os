@@ -51,9 +51,7 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
         await setMother(person._id, motherId || null);
       }
 
-      toast.success("Person updated", {
-        description: `${name} details were saved successfully.`,
-      });
+      toast.success("Person updated");
 
       if (onSaved) await onSaved();
       onClose();
@@ -69,50 +67,52 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="card-bg edit-modal rounded-xl p-6 space-y-5 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="card-bg edit-modal rounded-xl p-6 space-y-4 shadow-xl w-full max-w-xl">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h3 className="card-title text-lg truncate">Edit Person</h3>
+          <h3 className="card-title text-lg">Edit Person</h3>
           <button
             onClick={onClose}
-            className="text-neutral-400 hover:text-neutral-700 dark:hover:text-white"
+            className="text-sm opacity-70 hover:opacity-100 cursor-pointer"
           >
             ✕
           </button>
         </div>
 
-        {error && <div className="text-red-500 text-sm">{error}</div>}
+        {error && <p className="text-sm text-red-500">{error}</p>}
 
-        {/* Name */}
-        <Input value={name} onChange={setName} />
+        <input
+          value={name}
+          onChange={e => setName(e.target.value)}
+          className="control w-full"
+          placeholder="Full name"
+        />
 
-        {/* Gender */}
-        <Select value={gender} onChange={setGender}>
-          <option value="">Select Gender</option>
+        <select
+          value={gender}
+          onChange={e => setGender(e.target.value)}
+          className="control w-full"
+        >
+          <option value="">Select gender</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
           <option value="other">Other</option>
-        </Select>
+        </select>
 
-        {/* Birth Date */}
         <input
           type="date"
           value={birthDate}
           onChange={e => setBirthDate(e.target.value)}
-          className="
-            w-full rounded-md px-3 py-2 text-sm
-            border border-neutral-300
-            bg-[#eaf4ee] text-[#183128]
-            focus:outline-none focus:ring-2 focus:ring-[#357a5b]/30
-            dark:border-neutral-700
-            dark:bg-neutral-900 dark:text-neutral-100
-          "
+          className="control w-full"
         />
 
-        {/* Parents */}
-        <Select value={fatherId} onChange={setFatherId}>
-          <option value="">Father</option>
+        <select
+          value={fatherId}
+          onChange={e => setFatherId(e.target.value)}
+          className="control w-full"
+        >
+          <option value="">Select father (optional)</option>
           {persons
             .filter(p => p.gender === "male" && p._id !== person._id)
             .map(p => (
@@ -120,10 +120,14 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
                 {p.name}
               </option>
             ))}
-        </Select>
+        </select>
 
-        <Select value={motherId} onChange={setMotherId}>
-          <option value="">Mother</option>
+        <select
+          value={motherId}
+          onChange={e => setMotherId(e.target.value)}
+          className="control w-full"
+        >
+          <option value="">Select mother (optional)</option>
           {persons
             .filter(p => p.gender === "female" && p._id !== person._id)
             .map(p => (
@@ -131,10 +135,9 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
                 {p.name}
               </option>
             ))}
-        </Select>
+        </select>
 
-        {/* Deceased */}
-        <label className="flex items-center gap-2 text-sm card-meta">
+        <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={isDeceased}
@@ -143,11 +146,10 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
           Mark as deceased
         </label>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-3 pt-3">
+        <div className="flex justify-end gap-3 pt-2">
           <button
             onClick={onClose}
-            className="card-link no-underline text-sm"
+            className="text-sm opacity-70 hover:opacity-100 cursor-pointer"
             type="button"
           >
             Cancel
@@ -156,51 +158,17 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
           <button
             onClick={handleSave}
             disabled={loading}
-            className="bg-[#357a5b] text-white px-4 py-2 rounded-md text-sm hover:bg-[#285c46] disabled:opacity-60"
             type="button"
+            className="px-4 py-2 rounded text-sm font-medium cursor-pointer disabled:opacity-60"
+            style={{
+              backgroundColor: "var(--accent)",
+              color: "var(--bg)",
+            }}
           >
             Save
           </button>
         </div>
       </div>
     </div>
-  );
-}
-
-/* ---- helpers ---- */
-
-function Input({ value, onChange }) {
-  return (
-    <input
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      className="
-        w-full rounded-md px-3 py-2 text-sm
-        border border-neutral-300
-        bg-[#eaf4ee] text-[#183128]
-        focus:outline-none focus:ring-2 focus:ring-[#357a5b]/30
-        dark:border-neutral-700
-        dark:bg-neutral-900 dark:text-neutral-100
-      "
-    />
-  );
-}
-
-function Select({ value, onChange, children }) {
-  return (
-    <select
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      className="
-        w-full rounded-md px-3 py-2 text-sm
-        border border-neutral-300
-        bg-[#eaf4ee] text-[#183128]
-        focus:outline-none focus:ring-2 focus:ring-[#357a5b]/30
-        dark:border-neutral-700
-        dark:bg-neutral-900 dark:text-neutral-100
-      "
-    >
-      {children}
-    </select>
   );
 }

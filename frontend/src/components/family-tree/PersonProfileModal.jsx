@@ -33,39 +33,43 @@ export default function PersonProfileModal({
     >
       <div
         onClick={e => e.stopPropagation()}
-        className="rounded-xl p-6 space-y-5 card-bg modal shadow-xl"
+        className="card-bg modal rounded-xl p-6 shadow-xl w-full max-w-xl flex flex-col gap-5"
       >
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h2 className="card-title text-lg truncate">{person.name}</h2>
+          <h2 className="card-title text-lg">{person.name}</h2>
           <button
             onClick={onClose}
-            className="text-neutral-400 hover:text-neutral-700 dark:hover:text-white"
+            className="text-sm opacity-70 hover:opacity-100 cursor-pointer"
           >
             ✕
           </button>
         </div>
 
-        <Section title="Basic Information">
-          <Row label="Gender" value={person.gender || "—"} />
-          <Row label="Date of Birth" value={formatDate(person.birthDate)} />
-          <Row label="Status" value={person.isDeceased ? "Deceased" : "Alive"} />
-        </Section>
+        {/* Content */}
+        <div className="space-y-4 flex-1">
+          <Section title="Basic Information">
+            <Row label="Gender" value={person.gender || "—"} />
+            <Row label="Date of Birth" value={formatDate(person.birthDate)} />
+            <Row label="Status" value={person.isDeceased ? "Deceased" : "Alive"} />
+          </Section>
 
-        <Section title="Family">
-          <Row label="Father" value={father?.name || "—"} />
-          <Row label="Mother" value={mother?.name || "—"} />
-          <Row label="Children" value={person.children?.length || 0} />
-        </Section>
+          <Section title="Family">
+            <Row label="Father" value={father?.name || "—"} />
+            <Row label="Mother" value={mother?.name || "—"} />
+            <Row label="Children" value={person.children?.length || 0} />
+          </Section>
+        </div>
 
+        {/* Actions */}
         {isHonor && (
           <button
             onClick={() => setShowEdit(true)}
-            className="
-              w-full py-2 rounded-md text-sm font-medium
-              bg-[#1F3D34] text-white
-              hover:bg-[#183128]
-            "
+            className="w-full py-2 rounded text-sm font-medium cursor-pointer"
+            style={{
+              backgroundColor: "var(--accent)",
+              color: "var(--bg)",
+            }}
           >
             Edit Details
           </button>
@@ -73,7 +77,7 @@ export default function PersonProfileModal({
 
         <button
           onClick={onClose}
-          className="card-link w-full py-2 rounded-md text-sm no-underline"
+          className="w-full py-2 text-sm opacity-70 hover:opacity-100 cursor-pointer"
         >
           Close
         </button>

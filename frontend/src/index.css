@@ -15,7 +15,7 @@
 html.dark {
   --bg: #0f1f1a;          /* deep green-black */
   --text: #e5f2ed;        /* soft off-white */
-  --muted: #9ca3af;
+  --muted: #b6bbc4;
 
   --panel: rgba(24, 39, 33, 0.7);
   --border: rgba(255, 255, 255, 0.08);
@@ -179,4 +179,18 @@ html.dark .control {
   background-color: #181f1a;
   color: #e5f2ed;
   border: 1px solid #b2cfc3;
+}
+
+/* ---------- Date input (invert picker theme intentionally) ---------- */
+
+/* Light mode → light picker */
+:root input[type="date"] {
+  color-scheme: light;
+  color: var(--text);
+}
+
+/* Dark mode → dark picker */
+html.dark input[type="date"] {
+  color-scheme: dark;
+  color: var(--text);
 }

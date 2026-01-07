@@ -16,22 +16,18 @@ export default function CreateFamily() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 🔒 Frontend validation
     if (!familyName.trim()) {
       toast.error("Family name is required");
       return;
     }
-
     if (!personName.trim()) {
       toast.error("Your full name is required");
       return;
     }
-
     if (!birthDate) {
       toast.error("Birth date is required");
       return;
     }
-
     if (!gender) {
       toast.error("Please select your gender");
       return;
@@ -70,75 +66,72 @@ export default function CreateFamily() {
         onSubmit={handleSubmit}
         className="
           relative z-10 w-full max-w-sm
-          bg-white/70 backdrop-blur-md
+          backdrop-blur-md
           rounded-xl px-8 py-10
           shadow-lg shadow-black/5
           space-y-6
         "
+        style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}
       >
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-medium tracking-tight">
             Create Family
           </h1>
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm" style={{ color: "var(--muted)" }}>
             Start a new family space
           </p>
         </div>
 
         <div className="space-y-3">
-          <input
-            placeholder="Family name"
-            value={familyName}
-            onChange={(e) => setFamilyName(e.target.value)}
-            required
-            className="
-              w-full rounded-md px-3 py-2
-              border border-neutral-300
-              bg-white/80 text-sm
-              focus:outline-none
-              focus:ring-2 focus:ring-[#1F3D34]/30
-            "
-          />
-
-          <input
-            placeholder="Your full name"
-            value={personName}
-            onChange={(e) => setPersonName(e.target.value)}
-            required
-            className="
-              w-full rounded-md px-3 py-2
-              border border-neutral-300
-              bg-white/80 text-sm
-              focus:outline-none
-              focus:ring-2 focus:ring-[#1F3D34]/30
-            "
-          />
+          {[
+            {
+              placeholder: "Family name",
+              value: familyName,
+              onChange: setFamilyName,
+              type: "text"
+            },
+            {
+              placeholder: "Your full name",
+              value: personName,
+              onChange: setPersonName,
+              type: "text"
+            }
+          ].map((field, i) => (
+            <input
+              key={i}
+              type={field.type}
+              placeholder={field.placeholder}
+              value={field.value}
+              onChange={(e) => field.onChange(e.target.value)}
+              required
+              className="w-full rounded-md px-3 py-2 border bg-transparent text-sm focus:outline-none"
+              style={{
+                borderColor: "var(--border)",
+                color: "var(--text)"
+              }}
+            />
+          ))}
 
           <input
             type="date"
             value={birthDate}
             onChange={(e) => setBirthDate(e.target.value)}
             required
-            className="
-              w-full rounded-md px-3 py-2
-              border border-neutral-300
-              bg-white/80 text-sm
-              focus:outline-none
-              focus:ring-2 focus:ring-[#1F3D34]/30
-            "
+            className="w-full rounded-md px-3 py-2 border bg-transparent text-sm focus:outline-none"
+            style={{
+              borderColor: "var(--border)",
+              color: "var(--text)"
+            }}
           />
 
-          {/* Gender */}
           <select
             value={gender}
             onChange={(e) => setGender(e.target.value)}
-            className="
-              w-full rounded-md px-3 py-2
-              border border-neutral-300
-              bg-white/80 text-sm
-              focus:outline-none
-              focus:ring-2 focus:ring-[#1F3D34]/30
-            "
+            className="w-full rounded-md px-3 py-2 border bg-transparent text-sm focus:outline-none"
+            style={{
+              borderColor: "var(--border)",
+              color: "var(--text)"
+            }}
           >
             <option value="" disabled>
               Select gender
@@ -151,13 +144,8 @@ export default function CreateFamily() {
 
         <button
           disabled={loading}
-          className="
-            w-full rounded-md py-2 text-sm font-medium
-            bg-[#1F3D34] text-white
-            hover:bg-[#183128]
-            transition-colors
-            disabled:opacity-60
-          "
+          className="w-full rounded-md py-2 text-sm font-medium transition-colors disabled:opacity-60"
+          style={{ backgroundColor: "var(--accent)", color: "white" }}
         >
           {loading ? "Creating..." : "Create Family"}
         </button>

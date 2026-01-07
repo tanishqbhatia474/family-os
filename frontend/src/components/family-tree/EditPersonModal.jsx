@@ -7,6 +7,12 @@ import {
   setMother
 } from "../../api/person.api";
 
+/* ---------- Helpers ---------- */
+const isParentOlderThanChild = (parentDob, childDob) => {
+  if (!parentDob || !childDob) return false;
+  return new Date(parentDob) < new Date(childDob);
+};
+
 export default function EditPersonModal({ person, onClose, onSaved }) {
   const [name, setName] = useState(person.name);
   const [gender, setGender] = useState(person.gender || "");
@@ -36,13 +42,53 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
     setError("");
 
     try {
+      /* ---------- BASIC ---------- */
+      if (!name.trim()) return setError("Full name is required");
+      if (!gender) return setError("Gender is required");
+
+      const birth = birthDate ? new Date(birthDate) : null;
+
+      /* ---------- FATHER VALIDATION ---------- */
+      if (fatherId) {
+        const father = persons.find(p => p._id === fatherId);
+        if (!father) return setError("Invalid father selected");
+        if (father.gender !== "male")
+          return setError("Father must be male");
+        if (father.isDeceased)
+          return setError("Deceased person cannot be a parent");
+        if (
+          father.birthDate &&
+          birth &&
+          !isParentOlderThanChild(father.birthDate, birth)
+        )
+          return setError("Father must be older than the person");
+      }
+
+      /* ---------- MOTHER VALIDATION ---------- */
+      if (motherId) {
+        const mother = persons.find(p => p._id === motherId);
+        if (!mother) return setError("Invalid mother selected");
+        if (mother.gender !== "female")
+          return setError("Mother must be female");
+        if (mother.isDeceased)
+          return setError("Deceased person cannot be a parent");
+        if (
+          mother.birthDate &&
+          birth &&
+          !isParentOlderThanChild(mother.birthDate, birth)
+        )
+          return setError("Mother must be older than the person");
+      }
+
+      /* ---------- SAVE CORE ---------- */
       await editPerson(person._id, {
         name: name.trim(),
-        gender: gender.toLowerCase(),
+        gender,
         birthDate: birthDate || null,
         isDeceased
       });
 
+      /* ---------- RELATIONS ---------- */
       if (fatherId !== (person.fatherId || "")) {
         await setFather(person._id, fatherId || null);
       }
@@ -52,9 +98,9 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
       }
 
       toast.success("Person updated");
-
-      if (onSaved) await onSaved();
+      await onSaved?.();
       onClose();
+
     } catch (err) {
       setError(
         err?.response?.data?.message ||
@@ -69,15 +115,10 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="card-bg edit-modal rounded-xl p-6 space-y-4 shadow-xl w-full max-w-xl">
-        {/* Header */}
+
         <div className="flex justify-between items-center">
           <h3 className="card-title text-lg">Edit Person</h3>
-          <button
-            onClick={onClose}
-            className="text-sm opacity-70 hover:opacity-100 cursor-pointer"
-          >
-            ✕
-          </button>
+          <button onClick={onClose} className="opacity-70">✕</button>
         </div>
 
         {error && <p className="text-sm text-red-500">{error}</p>}
@@ -114,11 +155,9 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
         >
           <option value="">Select father (optional)</option>
           {persons
-            .filter(p => p.gender === "male" && p._id !== person._id)
+            .filter(p => p.gender === "male" && !p.isDeceased && p._id !== person._id)
             .map(p => (
-              <option key={p._id} value={p._id}>
-                {p.name}
-              </option>
+              <option key={p._id} value={p._id}>{p.name}</option>
             ))}
         </select>
 
@@ -129,11 +168,9 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
         >
           <option value="">Select mother (optional)</option>
           {persons
-            .filter(p => p.gender === "female" && p._id !== person._id)
+            .filter(p => p.gender === "female" && !p.isDeceased && p._id !== person._id)
             .map(p => (
-              <option key={p._id} value={p._id}>
-                {p.name}
-              </option>
+              <option key={p._id} value={p._id}>{p.name}</option>
             ))}
         </select>
 
@@ -147,23 +184,12 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
         </label>
 
         <div className="flex justify-end gap-3 pt-2">
-          <button
-            onClick={onClose}
-            className="text-sm opacity-70 hover:opacity-100 cursor-pointer"
-            type="button"
-          >
-            Cancel
-          </button>
-
+          <button onClick={onClose} className="opacity-70">Cancel</button>
           <button
             onClick={handleSave}
             disabled={loading}
-            type="button"
-            className="px-4 py-2 rounded text-sm font-medium cursor-pointer disabled:opacity-60"
-            style={{
-              backgroundColor: "var(--accent)",
-              color: "var(--bg)",
-            }}
+            className="px-4 py-2 rounded"
+            style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}
           >
             Save
           </button>

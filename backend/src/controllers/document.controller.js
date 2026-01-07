@@ -1,4 +1,4 @@
-import { uploadDocumentService ,getSignedDownloadUrlService, listDocumentsService, deleteDocumentService } from '../services/document.service.js';
+import { uploadDocumentService ,getSignedDownloadUrlService, getSignedViewUrlService, listDocumentsService, deleteDocumentService } from '../services/document.service.js';
 
 export const uploadDocument = async (req, res, next) => {
   try {
@@ -19,6 +19,19 @@ export const uploadDocument = async (req, res, next) => {
     next(err);
   }
 };
+
+export const viewDocument = async (req, res, next) => {
+  try {
+    const url = await getSignedViewUrlService(
+      req.user,
+      req.params.id
+    );
+    res.json({ url });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const downloadDocument = async (req, res, next) => {
   try {
     const url = await getSignedDownloadUrlService(

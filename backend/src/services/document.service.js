@@ -125,6 +125,49 @@ export const getSignedDownloadUrlService = async (user, documentId) => {
 
   return signedUrl;
 };
+
+export const getSignedViewUrlService = async (user, documentId) => {
+  if (!user.familyId || !user.personId) {
+    throw new Error('User does not belong to a family or person');
+  }
+
+  const document = await Document.findById(documentId);
+
+  if (!document) {
+    throw new AppError('Document not found', 404, 'NOT_FOUND');
+  }
+
+  // 🔒 Same access check as download
+  const hasAccess =
+    document.ownerPersonId.toString() === user.personId.toString() ||
+    document.viewAccessPersonIds
+      .map(id => id.toString())
+      .includes(user.personId.toString());
+
+  if (!hasAccess) {
+    throw new AppError('You do not have access to this document', 403, 'NOT_AUTHORIZED');
+  }
+
+  // Extract S3 key from fileUrl
+  const key = document.fileUrl.replace(
+    `s3://${process.env.AWS_S3_BUCKET_NAME}/`,
+    ''
+  );
+
+  const command = new GetObjectCommand({
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Key: key,
+    ResponseContentDisposition: 'inline' // ✅ KEY FIX: Opens in browser instead of downloading
+  });
+
+  // Signed URL valid for 5 minutes
+  const signedUrl = await getSignedUrl(s3, command, {
+    expiresIn: 300
+  });
+
+  return signedUrl;
+};
+
 export const listDocumentsService = async (user) => {
   if (!user.familyId || !user.personId) {
     throw new Error('User does not belong to a family or person');

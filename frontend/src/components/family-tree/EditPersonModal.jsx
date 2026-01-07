@@ -11,13 +11,18 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
   const [name, setName] = useState(person.name);
   const [gender, setGender] = useState(person.gender || "");
   const [isDeceased, setIsDeceased] = useState(person.isDeceased || false);
-  const [fatherId, setFatherId] = useState(
-  typeof person.fatherId === "string" ? person.fatherId : ""
+
+  const [birthDate, setBirthDate] = useState(
+    person.birthDate ? person.birthDate.slice(0, 10) : ""
   );
 
+  const [fatherId, setFatherId] = useState(
+    typeof person.fatherId === "string" ? person.fatherId : ""
+  );
   const [motherId, setMotherId] = useState(
     typeof person.motherId === "string" ? person.motherId : ""
   );
+
   const [persons, setPersons] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -26,58 +31,49 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
     getFamilyPersons().then(res => setPersons(res.data));
   }, []);
 
-const handleSave = async () => {
-  setLoading(true);
-  setError("");
+  const handleSave = async () => {
+    setLoading(true);
+    setError("");
 
-  try {
-    // 1️⃣ Update basic fields (this already works)
-    await editPerson(person._id, {
-      name: name.trim(),
-      gender: gender.toLowerCase(),
-      isDeceased
-    });
+    try {
+      await editPerson(person._id, {
+        name: name.trim(),
+        gender: gender.toLowerCase(),
+        birthDate: birthDate || null,
+        isDeceased
+      });
 
-    // 2️⃣ Update father ONLY if changed
-    if (fatherId !== (person.fatherId || "")) {
-      await setFather(person._id, fatherId || null);
+      if (fatherId !== (person.fatherId || "")) {
+        await setFather(person._id, fatherId || null);
+      }
+
+      if (motherId !== (person.motherId || "")) {
+        await setMother(person._id, motherId || null);
+      }
+
+      toast.success("Person updated", {
+        description: `${name} details were saved successfully.`,
+      });
+
+      if (onSaved) await onSaved();
+      onClose();
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+        err.message ||
+        "Failed to save"
+      );
+    } finally {
+      setLoading(false);
     }
-
-    // 3️⃣ Update mother ONLY if changed
-    if (motherId !== (person.motherId || "")) {
-      await setMother(person._id, motherId || null);
-    }
-
-    toast.success("Person updated", {
-      description: `${name} details were saved successfully.`,
-    });
-
-    if (typeof onSaved === "function") {
-      await onSaved();
-    }
-
-    onClose();
-  } catch (err) {
-    setError(
-      err?.response?.data?.message ||
-      err.message ||
-      "Failed to save"
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div
-        className="card-bg edit-modal rounded-xl p-6 space-y-5 shadow-xl"
-      >
+      <div className="card-bg edit-modal rounded-xl p-6 space-y-5 shadow-xl">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h3 className="card-title text-lg truncate">
-            Edit Person
-          </h3>
+          <h3 className="card-title text-lg truncate">Edit Person</h3>
           <button
             onClick={onClose}
             className="text-neutral-400 hover:text-neutral-700 dark:hover:text-white"
@@ -85,9 +81,8 @@ const handleSave = async () => {
             ✕
           </button>
         </div>
-        {error && (
-          <div className="text-red-500 text-sm mb-2">{error}</div>
-        )}
+
+        {error && <div className="text-red-500 text-sm">{error}</div>}
 
         {/* Name */}
         <Input value={name} onChange={setName} />
@@ -99,6 +94,21 @@ const handleSave = async () => {
           <option value="female">Female</option>
           <option value="other">Other</option>
         </Select>
+
+        {/* Birth Date */}
+        <input
+          type="date"
+          value={birthDate}
+          onChange={e => setBirthDate(e.target.value)}
+          className="
+            w-full rounded-md px-3 py-2 text-sm
+            border border-neutral-300
+            bg-[#eaf4ee] text-[#183128]
+            focus:outline-none focus:ring-2 focus:ring-[#357a5b]/30
+            dark:border-neutral-700
+            dark:bg-neutral-900 dark:text-neutral-100
+          "
+        />
 
         {/* Parents */}
         <Select value={fatherId} onChange={setFatherId}>
@@ -137,9 +147,8 @@ const handleSave = async () => {
         <div className="flex justify-end gap-3 pt-3">
           <button
             onClick={onClose}
-            className="card-link no-underline text-sm cursor-pointer"
+            className="card-link no-underline text-sm"
             type="button"
-            style={{ textDecoration: 'none' }}
           >
             Cancel
           </button>
@@ -147,7 +156,7 @@ const handleSave = async () => {
           <button
             onClick={handleSave}
             disabled={loading}
-            className="bg-[#357a5b] text-white px-4 py-2 rounded-md text-sm hover:bg-[#285c46] disabled:opacity-60 transition-colors cursor-pointer"
+            className="bg-[#357a5b] text-white px-4 py-2 rounded-md text-sm hover:bg-[#285c46] disabled:opacity-60"
             type="button"
           >
             Save
@@ -158,7 +167,7 @@ const handleSave = async () => {
   );
 }
 
-/* ---- small helpers ---- */
+/* ---- helpers ---- */
 
 function Input({ value, onChange }) {
   return (

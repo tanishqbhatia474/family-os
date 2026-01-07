@@ -5,49 +5,45 @@ export default function TreeNode({ person }) {
     <div className="pl-6 relative">
       {/* connector line */}
       <div
-        className={`
+        className="
           absolute left-0 top-0 h-full w-px
-          ${isDeceased ? "bg-neutral-400/30" : "bg-[#1F3D34]/20"}
-        `}
+          opacity-40
+        "
+        style={{
+          backgroundColor: isDeceased
+            ? "var(--muted)"
+            : "var(--accent)"
+        }}
       />
 
       {/* node */}
       <div
-        className={`
+        className="
           inline-block
           px-4 py-2
           rounded-md
           border
           backdrop-blur-sm
-
-          ${
-            isDeceased
-              ? `
-                bg-neutral-200/60
-                border-neutral-400/30
-              `
-              : `
-                bg-white/70
-                border-[#1F3D34]/15
-              `
-          }
-        `}
+        "
+        style={{
+          backgroundColor: "var(--panel)",
+          borderColor: "var(--border)",
+          color: "var(--text)",
+          opacity: isDeceased ? 0.7 : 1
+        }}
       >
         <p
-          className={`
-            text-sm font-medium
-            ${
-              isDeceased
-                ? "text-neutral-600"
-                : "text-neutral-900"
-            }
-          `}
+          className="text-sm font-medium"
+          style={{ color: "var(--text)" }}
         >
           {person.name}
         </p>
 
         {isDeceased && (
-          <p className="text-xs text-neutral-500 italic mt-0.5">
+          <p
+            className="text-xs italic mt-0.5"
+            style={{ color: "var(--muted)" }}
+          >
             Deceased
           </p>
         )}

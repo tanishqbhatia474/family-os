@@ -2,6 +2,15 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import EditPersonModal from "./EditPersonModal";
 
+const formatDate = (date) =>
+  date
+    ? new Date(date).toLocaleDateString(undefined, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
+
 export default function PersonProfileModal({
   person,
   personMap,
@@ -23,7 +32,7 @@ export default function PersonProfileModal({
       onClick={onClose}
     >
       <div
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
         className="rounded-xl p-6 space-y-5 card-bg modal shadow-xl"
       >
         {/* Header */}
@@ -38,14 +47,15 @@ export default function PersonProfileModal({
         </div>
 
         <Section title="Basic Information">
-          <Row label="Gender" value={person.gender || "—"} lightText />
-          <Row label="Status" value={person.isDeceased ? "Deceased" : "Alive"} lightText />
+          <Row label="Gender" value={person.gender || "—"} />
+          <Row label="Date of Birth" value={formatDate(person.birthDate)} />
+          <Row label="Status" value={person.isDeceased ? "Deceased" : "Alive"} />
         </Section>
 
         <Section title="Family">
-          <Row label="Father" value={father?.name || "—"} lightText />
-          <Row label="Mother" value={mother?.name || "—"} lightText />
-          <Row label="Children" value={person.children?.length || 0} lightText />
+          <Row label="Father" value={father?.name || "—"} />
+          <Row label="Mother" value={mother?.name || "—"} />
+          <Row label="Children" value={person.children?.length || 0} />
         </Section>
 
         {isHonor && (
@@ -55,7 +65,6 @@ export default function PersonProfileModal({
               w-full py-2 rounded-md text-sm font-medium
               bg-[#1F3D34] text-white
               hover:bg-[#183128]
-              cursor-pointer
             "
           >
             Edit Details
@@ -64,8 +73,7 @@ export default function PersonProfileModal({
 
         <button
           onClick={onClose}
-          className="card-link w-full py-2 rounded-md text-sm border border-transparent cursor-pointer no-underline"
-          style={{ textDecoration: 'none' }}
+          className="card-link w-full py-2 rounded-md text-sm no-underline"
         >
           Close
         </button>
@@ -75,22 +83,22 @@ export default function PersonProfileModal({
             person={person}
             onClose={() => {
               setShowEdit(false);
-              onClose(); // 🔥 CLOSE PROFILE TOO
+              onClose();
             }}
             onSaved={async () => {
-              if (onSaved) await onSaved(); // 🔥 REFRESH TREE & PERSONMAP
+              if (onSaved) await onSaved();
               setShowEdit(false);
-              onClose();       // 🔥 CLOSE PROFILE
+              onClose();
             }}
           />
         )}
-
       </div>
     </div>
   );
 }
 
 /* helpers */
+
 function Section({ title, children }) {
   return (
     <div className="space-y-2">
@@ -100,7 +108,7 @@ function Section({ title, children }) {
   );
 }
 
-function Row({ label, value, lightText }) {
+function Row({ label, value }) {
   return (
     <div className="flex justify-between text-sm">
       <span className="row-label">{label}</span>

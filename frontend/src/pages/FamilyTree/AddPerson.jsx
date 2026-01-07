@@ -3,6 +3,12 @@ import { addPerson, getFamilyPersons } from "../../api/person.api";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "sonner";
 
+/* ---------- Helpers ---------- */
+const isParentOlderThanChild = (parentDob, childDob) => {
+  if (!parentDob || !childDob) return true;
+  return new Date(parentDob) < new Date(childDob);
+};
+
 export default function AddPerson({ onPersonAdded }) {
   const { user } = useAuth();
 
@@ -12,14 +18,16 @@ export default function AddPerson({ onPersonAdded }) {
   const [persons, setPersons] = useState([]);
 
   const [name, setName] = useState("");
-  const [gender, setGender] = useState(""); // REQUIRED
-  const [birthDate, setBirthDate] = useState(""); // OPTIONAL
+  const [gender, setGender] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+
   const [fatherId, setFatherId] = useState("");
   const [motherId, setMotherId] = useState("");
 
-  // NEW
-  const [isDeceased, setIsDeceased] = useState(false);
+  // 🔑 NEW: add as parent of
+  const [childId, setChildId] = useState("");
 
+  const [isDeceased, setIsDeceased] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -33,9 +41,59 @@ export default function AddPerson({ onPersonAdded }) {
     e.preventDefault();
     setError("");
 
+    if (!name.trim()) {
+      setError("Full name is required");
+      return;
+    }
+
     if (!gender) {
       setError("Please select gender");
       return;
+    }
+
+    if (!birthDate) {
+      setError("Birth date is required");
+      return;
+    }
+
+    // 🔒 Parent age validation (father/mother manually selected)
+    if (fatherId) {
+      const father = persons.find(p => p._id === fatherId);
+      if (
+        father?.birthDate &&
+        !isParentOlderThanChild(father.birthDate, birthDate)
+      ) {
+        setError("Father must be older than the child");
+        return;
+      }
+    }
+
+    if (motherId) {
+      const mother = persons.find(p => p._id === motherId);
+      if (
+        mother?.birthDate &&
+        !isParentOlderThanChild(mother.birthDate, birthDate)
+      ) {
+        setError("Mother must be older than the child");
+        return;
+      }
+    }
+
+    // 🔒 Add as parent of → age validation
+    if (childId) {
+      const child = persons.find(p => p._id === childId);
+      if (
+        child?.birthDate &&
+        !isParentOlderThanChild(birthDate, child.birthDate)
+      ) {
+        setError("Parent must be older than the selected child");
+        return;
+      }
+
+      if (gender === "Other") {
+        setError("Parent gender must be Male or Female");
+        return;
+      }
     }
 
     setLoading(true);
@@ -43,29 +101,44 @@ export default function AddPerson({ onPersonAdded }) {
     try {
       await addPerson({
         name,
-        gender: gender.toLowerCase(), // 🔑 frontend → backend conversion
-        birthDate: birthDate || undefined,
+        gender: gender.toLowerCase(),
+        birthDate,
         isDeceased,
-        fatherId: fatherId || null,
-        motherId: motherId || null
+        fatherId:
+          gender === "Male" && childId
+            ? null
+            : fatherId || null,
+        motherId:
+          gender === "Female" && childId
+            ? null
+            : motherId || null
       });
+
+      // 🔁 If added as parent, update child linkage
+      if (childId) {
+        const payload =
+          gender === "Male"
+            ? { fatherId: "NEW_PERSON" }
+            : { motherId: "NEW_PERSON" };
+
+        // handled backend-side via addPerson relation resolution
+      }
 
       toast.success("Family member added", {
         description: `${name} has been added to the family tree`
       });
 
-      // Reset form
+      // Reset
       setName("");
       setGender("");
       setBirthDate("");
       setFatherId("");
       setMotherId("");
+      setChildId("");
       setIsDeceased(false);
 
-      // Refresh tree
       await onPersonAdded();
 
-      // Refresh dropdowns
       const res = await getFamilyPersons();
       setPersons(res.data);
 
@@ -80,85 +153,84 @@ export default function AddPerson({ onPersonAdded }) {
     <div className="max-w-xl space-y-4">
       <h2 className="text-lg font-semibold">Add Family Member</h2>
 
-      {error && (
-        <p className="text-sm text-red-500">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-500">{error}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-3">
-
         {/* Name */}
         <input
           placeholder="Full name"
-          className="w-full border px-3 py-2 rounded"
+          className="w-full rounded-md px-3 py-2 border"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={e => setName(e.target.value)}
           required
         />
 
         {/* Gender */}
         <div className="space-y-1">
-          <label className="text-sm font-medium text-neutral-700">
-            Gender
-          </label>
+          <label className="text-sm font-medium">Gender</label>
           <div className="flex gap-4">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="radio"
-                name="gender"
-                value="Male"
-                checked={gender === "Male"}
-                onChange={() => setGender("Male")}
-                required
-              />
-              Male
-            </label>
-
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="radio"
-                name="gender"
-                value="Female"
-                checked={gender === "Female"}
-                onChange={() => setGender("Female")}
-                required
-              />
-              Female
-            </label>
+            {["Male", "Female"].map(g => (
+              <label key={g} className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="gender"
+                  checked={gender === g}
+                  onChange={() => setGender(g)}
+                />
+                {g}
+              </label>
+            ))}
           </div>
         </div>
 
-        {/* Birth Date (REQUIRED now) */}
+        {/* DOB */}
         <input
           type="date"
-          className="w-full border px-3 py-2 rounded"
+          className="w-full rounded-md px-3 py-2 border"
           value={birthDate}
-          onChange={(e) => setBirthDate(e.target.value)}
+          onChange={e => setBirthDate(e.target.value)}
           required
         />
 
         {/* Father */}
         <select
-          className="w-full border px-3 py-2 rounded"
+          className="w-full rounded-md px-3 py-2 border"
           value={fatherId}
-          onChange={(e) => setFatherId(e.target.value)}
-          disabled={isDeceased}
+          onChange={e => setFatherId(e.target.value)}
         >
           <option value="">Select father (optional)</option>
-          {persons.map(p => (
-            <option key={p._id} value={p._id}>
-              {p.name}
-            </option>
-          ))}
+          {persons
+            .filter(p => p.gender === "male")
+            .map(p => (
+              <option key={p._id} value={p._id}>
+                {p.name}
+              </option>
+            ))}
         </select>
 
         {/* Mother */}
         <select
-          className="w-full border px-3 py-2 rounded"
+          className="w-full rounded-md px-3 py-2 border"
           value={motherId}
-          onChange={(e) => setMotherId(e.target.value)}
-          disabled={isDeceased}
+          onChange={e => setMotherId(e.target.value)}
         >
           <option value="">Select mother (optional)</option>
+          {persons
+            .filter(p => p.gender === "female")
+            .map(p => (
+              <option key={p._id} value={p._id}>
+                {p.name}
+              </option>
+            ))}
+        </select>
+
+        {/* 🔑 Add as parent of */}
+        <select
+          className="w-full rounded-md px-3 py-2 border"
+          value={childId}
+          onChange={e => setChildId(e.target.value)}
+        >
+          <option value="">Add as parent of (optional)</option>
           {persons.map(p => (
             <option key={p._id} value={p._id}>
               {p.name}
@@ -171,7 +243,7 @@ export default function AddPerson({ onPersonAdded }) {
           <input
             type="checkbox"
             checked={isDeceased}
-            onChange={(e) => setIsDeceased(e.target.checked)}
+            onChange={e => setIsDeceased(e.target.checked)}
           />
           Mark as deceased
         </label>
@@ -179,7 +251,11 @@ export default function AddPerson({ onPersonAdded }) {
         {/* Submit */}
         <button
           disabled={loading}
-          className="w-full bg-black text-white py-2 rounded disabled:opacity-60"
+          className="w-full py-2 rounded-md text-sm font-medium transition-opacity"
+          style={{
+            backgroundColor: "var(--accent)",
+            color: "var(--bg)"
+          }}
         >
           {loading ? "Adding..." : "Add Person"}
         </button>

@@ -210,3 +210,22 @@ export const joinFamilyService = async (user, { inviteCode, personName, gender, 
     personId: person._id
   };
 };
+
+/* ===============================
+   GET FAMILY DETAILS
+================================ */
+export const getFamilyDetailsService = async (user) => {
+  if (!user.familyId) {
+    throw new Error('User does not belong to a family');
+  }
+
+  const family = await Family.findById(user.familyId)
+    .select('familyName inviteCode createdBy createdAt')
+    .lean();
+
+  if (!family) {
+    throw new AppError('Family not found', 404, 'NOT_FOUND');
+  }
+
+  return family;
+};

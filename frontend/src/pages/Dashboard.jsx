@@ -18,64 +18,70 @@ export default function Dashboard() {
           important records, and shared traditions over time.
         </p>
 
-        <p className="text-[1rem] leading-relaxed italic max-w-md text-[var(--muted)]">
-          Built to grow quietly with your family — not to rush it.
+        {/* ✅ contextual line */}
+        <p className="text-[0.95rem] leading-relaxed italic max-w-md text-[var(--muted)]">
+          You’re viewing a space that grows quietly with your family.
         </p>
       </section>
 
       {/* Main content */}
-      <section className="max-w-[680px] mx-auto px-6 space-y-20 pb-32">
-        <div className="space-y-4">
+      <section className="max-w-[680px] mx-auto px-6 space-y-10 pb-32">
+
+        {/* Family Tree */}
+        <div className="card-bg rounded-xl p-6 space-y-4">
           <h2 className="text-[1.25rem] font-medium text-[var(--text)]">
             Family Tree
           </h2>
 
-          <p className="text-[1.125rem] text-[var(--muted)]">
+          <p className="text-[1.05rem] text-[var(--muted)]">
             View and manage your family structure, relationships, and lineage
             in one place.
           </p>
 
           <Link
             to="/family-tree"
-            className="text-sm font-medium underline underline-offset-4 text-[var(--accent)]"
+            className="text-sm font-medium text-[var(--accent)] hover:opacity-80"
           >
-            View family tree
+            View family tree →
           </Link>
         </div>
 
-        <div className="space-y-4">
+        {/* Documents */}
+        <div className="card-bg rounded-xl p-6 space-y-4">
           <h2 className="text-[1.25rem] font-medium text-[var(--text)]">
             Documents
           </h2>
 
-          <p className="text-[1.125rem] text-[var(--muted)]">
+          <p className="text-[1.05rem] text-[var(--muted)]">
             Store and access important family documents securely.
           </p>
 
           <Link
             to="/documents"
-            className="text-sm font-medium underline underline-offset-4 text-[var(--accent)]"
+            className="text-sm font-medium text-[var(--accent)] hover:opacity-80"
           >
-            Go to documents
+            Go to documents →
           </Link>
         </div>
 
-        <div className="space-y-4">
+        {/* Rituals */}
+        <div className="card-bg rounded-xl p-6 space-y-4">
           <h2 className="text-[1.25rem] font-medium text-[var(--text)]">
             Rituals
           </h2>
 
-          <p className="text-[1.125rem] text-[var(--muted)]">
+          <p className="text-[1.05rem] text-[var(--muted)]">
             Capture traditions and meaningful recurring moments.
           </p>
 
           <Link
             to="/rituals"
-            className="text-sm font-medium underline underline-offset-4 text-[var(--accent)]"
+            className="text-sm font-medium text-[var(--accent)] hover:opacity-80"
           >
-            Explore rituals
+            Explore rituals →
           </Link>
         </div>
+
       </section>
     </div>
   );

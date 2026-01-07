@@ -121,7 +121,15 @@ export default function Rituals() {
 
           <button
             onClick={() => setShowCreate(true)}
-            className="bg-[#5A9684] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#4C7F70]"
+            className="
+              px-4 py-2 rounded-lg text-sm font-medium
+              cursor-pointer
+              hover:opacity-90
+            "
+            style={{
+              backgroundColor: "var(--accent)",
+              color: "var(--bg)",
+            }}
           >
             Add Ritual
           </button>
@@ -236,16 +244,25 @@ function RitualCard({ ritual, isOwner, onView, onEdit, onDelete }) {
       </div>
 
       <div className="flex justify-between items-center">
-        <button onClick={onView} className="card-link text-sm">
+        <button
+          onClick={onView}
+          className="card-link text-sm cursor-pointer no-underline"
+        >
           View
         </button>
 
         {isOwner && (
           <div className="flex gap-4">
-            <button onClick={onEdit} className="card-link text-sm">
+            <button
+              onClick={onEdit}
+              className="card-link text-sm cursor-pointer no-underline"
+            >
               Edit
             </button>
-            <button onClick={onDelete} className="card-link delete text-sm">
+            <button
+              onClick={onDelete}
+              className="card-link delete text-sm cursor-pointer no-underline"
+            >
               Delete
             </button>
           </div>

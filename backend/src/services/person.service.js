@@ -316,3 +316,112 @@ export const addChildService = async (user, parentId, childId, role) => {
   await child.save();
   return child;
 };
+
+/* =========================
+   ADD SPOUSE
+========================= */
+export const addSpouseService = async (user, personId, spouseId) => {
+  if (!user.isHonor) {
+    throw new AppError(
+      'Only family owner can modify relationships',
+      403,
+      'NOT_AUTHORIZED'
+    );
+  }
+
+  if (personId === spouseId) {
+    throw new AppError(
+      'Person cannot be their own spouse',
+      400,
+      'BAD_REQUEST'
+    );
+  }
+
+  const person = await Person.findById(personId);
+  const spouse = await Person.findById(spouseId);
+
+  if (!person || !spouse) {
+    throw new AppError('Person not found', 404, 'NOT_FOUND');
+  }
+
+  if (
+    person.familyId.toString() !== user.familyId.toString() ||
+    spouse.familyId.toString() !== user.familyId.toString()
+  ) {
+    throw new AppError(
+      'Persons must belong to same family',
+      403,
+      'NOT_AUTHORIZED'
+    );
+  }
+
+  // Check if already spouses
+  if (person.spouseIds.includes(spouseId)) {
+    throw new AppError(
+      'These persons are already spouses',
+      400,
+      'ALREADY_SPOUSES'
+    );
+  }
+
+  // Add bidirectional relationship
+  person.spouseIds.push(spouse._id);
+  spouse.spouseIds.push(person._id);
+
+  await person.save();
+  await spouse.save();
+
+  return {
+    message: 'Spouse added successfully',
+    person,
+    spouse
+  };
+};
+
+/* =========================
+   REMOVE SPOUSE
+========================= */
+export const removeSpouseService = async (user, personId, spouseId) => {
+  if (!user.isHonor) {
+    throw new AppError(
+      'Only family owner can modify relationships',
+      403,
+      'NOT_AUTHORIZED'
+    );
+  }
+
+  const person = await Person.findById(personId);
+  const spouse = await Person.findById(spouseId);
+
+  if (!person || !spouse) {
+    throw new AppError('Person not found', 404, 'NOT_FOUND');
+  }
+
+  if (
+    person.familyId.toString() !== user.familyId.toString() ||
+    spouse.familyId.toString() !== user.familyId.toString()
+  ) {
+    throw new AppError(
+      'Persons must belong to same family',
+      403,
+      'NOT_AUTHORIZED'
+    );
+  }
+
+  // Remove bidirectional relationship
+  person.spouseIds = person.spouseIds.filter(
+    id => id.toString() !== spouseId.toString()
+  );
+  spouse.spouseIds = spouse.spouseIds.filter(
+    id => id.toString() !== personId.toString()
+  );
+
+  await person.save();
+  await spouse.save();
+
+  return {
+    message: 'Spouse removed successfully',
+    person,
+    spouse
+  };
+};

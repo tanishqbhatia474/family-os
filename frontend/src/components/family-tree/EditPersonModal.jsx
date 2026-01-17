@@ -4,7 +4,9 @@ import {
   editPerson,
   getFamilyPersons,
   setFather,
-  setMother
+  setMother,
+  addSpouse,
+  removeSpouse
 } from "../../api/person.api";
 
 /* ---------- Helpers ---------- */
@@ -32,6 +34,60 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
   const [persons, setPersons] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [spouseIdToAdd, setSpouseIdToAdd] = useState("");
+  const [spouseLoading, setSpouseLoading] = useState(false);
+
+  // Helper: get current spouses
+  const currentSpouses = person.spouseIds
+    ? persons.filter(p => person.spouseIds.includes(p._id))
+    : [];
+
+  // Helper: get eligible spouses
+  const eligibleSpouses = persons.filter(p =>
+    p._id !== person._id &&
+    !p.isDeceased &&
+    !(person.spouseIds || []).includes(p._id) &&
+    !(p.spouseIds || []).includes(person._id)
+  );
+
+  // Mutual exclusion logic
+  const hasSpouse = (person.spouseIds && person.spouseIds.length > 0);
+  const hasParent = !!fatherId || !!motherId;
+
+  // Remove spouse handler
+  const handleRemoveSpouse = async spouseId => {
+    setSpouseLoading(true);
+    setError("");
+    try {
+      await removeSpouse(person._id, spouseId);
+      await getFamilyPersons().then(res => setPersons(res.data));
+      toast.success("Spouse removed");
+      setSpouseIdToAdd("");
+      await onSaved?.();
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || "Failed to remove spouse");
+    } finally {
+      setSpouseLoading(false);
+    }
+  };
+
+  // Add spouse handler
+  const handleAddSpouse = async () => {
+    if (!spouseIdToAdd) return;
+    setSpouseLoading(true);
+    setError("");
+    try {
+      await addSpouse(person._id, spouseIdToAdd);
+      await getFamilyPersons().then(res => setPersons(res.data));
+      toast.success("Spouse added");
+      setSpouseIdToAdd("");
+      await onSaved?.();
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || "Failed to add spouse");
+    } finally {
+      setSpouseLoading(false);
+    }
+  };
 
   useEffect(() => {
     getFamilyPersons().then(res => setPersons(res.data));
@@ -148,10 +204,12 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
           className="control w-full"
         />
 
+        {/* Parents Section */}
         <select
           value={fatherId}
           onChange={e => setFatherId(e.target.value)}
           className="control w-full"
+          disabled={hasSpouse}
         >
           <option value="">Select father (optional)</option>
           {persons
@@ -165,6 +223,7 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
           value={motherId}
           onChange={e => setMotherId(e.target.value)}
           className="control w-full"
+          disabled={hasSpouse}
         >
           <option value="">Select mother (optional)</option>
           {persons
@@ -173,6 +232,43 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
               <option key={p._id} value={p._id}>{p.name}</option>
             ))}
         </select>
+
+        {/* Spouse(s) Section */}
+        <div>
+          <label className="section-label block mb-1">Spouse(s)</label>
+          {currentSpouses.length === 0 && <div className="text-sm text-gray-500">None</div>}
+          <ul className="space-y-1 mb-2">
+            {currentSpouses.map(spouse => (
+              <li key={spouse._id} className="flex items-center gap-2">
+                <span className="card-meta">{spouse.name}</span>
+                <button
+                  className="card-link text-xs px-2 py-1 rounded"
+                  disabled={isDeceased || spouseLoading}
+                  onClick={() => handleRemoveSpouse(spouse._id)}
+                  title="Remove spouse"
+                >✕</button>
+              </li>
+            ))}
+          </ul>
+          <div className="flex gap-2 items-center">
+            <select
+              value={spouseIdToAdd}
+              onChange={e => setSpouseIdToAdd(e.target.value)}
+              className="control w-full"
+              disabled={isDeceased || hasParent || spouseLoading}
+            >
+              <option value="">Add spouse</option>
+              {eligibleSpouses.map(s => (
+                <option key={s._id} value={s._id}>{s.name}</option>
+              ))}
+            </select>
+            <button
+              className="card-link px-3 py-1 rounded"
+              disabled={isDeceased || hasParent || spouseLoading || !spouseIdToAdd}
+              onClick={handleAddSpouse}
+            >Add</button>
+          </div>
+        </div>
 
         <label className="flex items-center gap-2 text-sm">
           <input

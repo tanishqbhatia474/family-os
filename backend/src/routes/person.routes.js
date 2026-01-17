@@ -5,7 +5,9 @@ import { editPerson } from '../controllers/person.controller.js';
 import {
   setFather,
   setMother,
-  addChild
+  addChild,
+  addSpouse,
+  removeSpouse
 } from '../controllers/person.controller.js';
 
 const router = express.Router();
@@ -20,5 +22,7 @@ router.patch('/:id', protect, editPerson);
 router.patch('/:childId/set-father', protect, setFather);
 router.patch('/:childId/set-mother', protect, setMother);
 router.patch('/:parentId/add-child', protect, addChild);
+router.patch('/:personId/add-spouse', protect, addSpouse);
+router.patch('/:personId/remove-spouse', protect, removeSpouse);
 
 export default router;

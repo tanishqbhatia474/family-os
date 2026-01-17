@@ -4,17 +4,18 @@ import {
   addPerson,
   getFamilyPersons,
   setFather,
-  setMother
+  setMother,
+  addSpouse
 } from "../../api/person.api";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "sonner";
 import { Check, Copy } from "lucide-react";
 
 /* ---------- Helpers ---------- */
-const isOlder = (parentDob, childDob) => {
-  if (!parentDob || !childDob) return false;
-  return new Date(parentDob) < new Date(childDob);
-};
+  const isOlder = (olderDob, youngerDob) => {
+    if (!olderDob || !youngerDob) return false;
+    return new Date(olderDob).getTime() < new Date(youngerDob).getTime();
+  };
 
 export default function AddPerson({ inviteCode, onPersonAdded }) {
   const { user } = useAuth();
@@ -29,6 +30,7 @@ export default function AddPerson({ inviteCode, onPersonAdded }) {
   const [fatherId, setFatherId] = useState("");
   const [motherId, setMotherId] = useState("");
   const [childId, setChildId] = useState("");
+  const [spouseId, setSpouseId] = useState("");
 
   const [isDeceased, setIsDeceased] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,6 +40,21 @@ export default function AddPerson({ inviteCode, onPersonAdded }) {
   useEffect(() => {
     getFamilyPersons().then(res => setPersons(res.data));
   }, []);
+
+  // Mutual exclusivity: clear conflicting fields
+  useEffect(() => {
+    if (spouseId) {
+      if (fatherId) setFatherId("");
+      if (motherId) setMotherId("");
+      if (childId) setChildId("");
+    }
+  }, [spouseId]);
+
+  useEffect(() => {
+    if (fatherId || motherId || childId) {
+      if (spouseId) setSpouseId("");
+    }
+  }, [fatherId, motherId, childId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,38 +66,41 @@ export default function AddPerson({ inviteCode, onPersonAdded }) {
 
     const birth = new Date(birthDate);
 
-    /* ---------- Father validation ---------- */
-    if (fatherId) {
-      const father = persons.find(p => p._id === fatherId);
-      if (!father) return setError("Invalid father selected");
-      if (father.gender !== "male")
-        return setError("Father must be male");
-      if (!father.birthDate || !isOlder(father.birthDate, birth))
-        return setError("Father must be older than the child");
-      if (father.isDeceased)
-        return setError("Deceased person cannot be a parent");
-    }
+    // Only run parent/child validation if spouse is not selected
+    if (!spouseId) {
+      /* ---------- Father validation ---------- */
+      if (fatherId) {
+        const father = persons.find(p => p._id === fatherId);
+        if (!father) return setError("Invalid father selected");
+        if (father.gender !== "male")
+          return setError("Father must be male");
+        if (!father.birthDate || !isOlder(father.birthDate, birth))
+          return setError("Father must be older than the child");
+        if (father.isDeceased)
+          return setError("Deceased person cannot be a parent");
+      }
 
-    /* ---------- Mother validation ---------- */
-    if (motherId) {
-      const mother = persons.find(p => p._id === motherId);
-      if (!mother) return setError("Invalid mother selected");
-      if (mother.gender !== "female")
-        return setError("Mother must be female");
-      if (!mother.birthDate || !isOlder(mother.birthDate, birth))
-        return setError("Mother must be older than the child");
-      if (mother.isDeceased)
-        return setError("Deceased person cannot be a parent");
-    }
+      /* ---------- Mother validation ---------- */
+      if (motherId) {
+        const mother = persons.find(p => p._id === motherId);
+        if (!mother) return setError("Invalid mother selected");
+        if (mother.gender !== "female")
+          return setError("Mother must be female");
+        if (!mother.birthDate || !isOlder(mother.birthDate, birth))
+          return setError("Mother must be older than the child");
+        if (mother.isDeceased)
+          return setError("Deceased person cannot be a parent");
+      }
 
-    /* ---------- Add as parent of ---------- */
-    if (childId) {
-      const child = persons.find(p => p._id === childId);
-      if (!child) return setError("Invalid child selected");
-      if (!child.birthDate || !isOlder(birth, child.birthDate))
-        return setError("Parent must be older than the selected child");
-      if (isDeceased)
-        return setError("Deceased person cannot be a parent");
+      /* ---------- Add as parent of ---------- */
+      if (childId) {
+        const child = persons.find(p => p._id === childId);
+        if (!child) return setError("Invalid child selected");
+        if (!child.birthDate || !isOlder(birth, child.birthDate))
+          return setError("Parent must be older than the selected child");
+        if (isDeceased)
+          return setError("Deceased person cannot be a parent");
+      }
     }
 
     setLoading(true);
@@ -89,21 +109,26 @@ export default function AddPerson({ inviteCode, onPersonAdded }) {
         name,
         gender,
         birthDate,
-        fatherId: fatherId || null,
-        motherId: motherId || null,
+        fatherId: spouseId ? null : fatherId || null,
+        motherId: spouseId ? null : motherId || null,
         isDeceased
       });
 
       const newPersonId = res.data?._id;
 
-      /* ---------- Attach as parent ---------- */
-      if (childId && newPersonId) {
+      // Attach as parent if needed
+      if (!spouseId && childId && newPersonId) {
         if (gender === "male") {
           await setFather(childId, { fatherId: newPersonId });
         }
         if (gender === "female") {
           await setMother(childId, { motherId: newPersonId });
         }
+      }
+
+      // Attach as spouse if needed
+      if (spouseId && newPersonId) {
+        await addSpouse(newPersonId, spouseId);
       }
 
       toast.success("Family member added");
@@ -114,6 +139,7 @@ export default function AddPerson({ inviteCode, onPersonAdded }) {
       setFatherId("");
       setMotherId("");
       setChildId("");
+      setSpouseId("");
       setIsDeceased(false);
 
       await onPersonAdded();
@@ -164,21 +190,56 @@ export default function AddPerson({ inviteCode, onPersonAdded }) {
           <option value="female">Female</option>
         </select>
 
-        <select className="control w-full" value={fatherId} onChange={e => setFatherId(e.target.value)}>
+        <select
+          className="control w-full"
+          value={spouseId}
+          onChange={e => setSpouseId(e.target.value)}
+          disabled={!!fatherId || !!motherId || !!childId}
+        >
+          <option value="">Add as spouse of (optional)</option>
+          {persons
+            .filter(p =>
+              !p.isDeceased &&
+              p._id !== "" &&
+              p._id !== undefined &&
+              p._id !== null &&
+              (!p.spouseIds || p.spouseIds.length === 0)
+            )
+            .map(p => (
+              <option key={p._id} value={p._id}>{p.name}</option>
+            ))}
+        </select>
+
+        <select
+          className="control w-full"
+          value={fatherId}
+          onChange={e => setFatherId(e.target.value)}
+          disabled={!!spouseId}
+        >
           <option value="">Select father (optional)</option>
           {persons.filter(p => p.gender === "male" && !p.isDeceased).map(p =>
             <option key={p._id} value={p._id}>{p.name}</option>
           )}
         </select>
 
-        <select className="control w-full" value={motherId} onChange={e => setMotherId(e.target.value)}>
+        <select
+          className="control w-full"
+          value={motherId}
+          onChange={e => setMotherId(e.target.value)}
+          disabled={!!spouseId}
+        >
           <option value="">Select mother (optional)</option>
           {persons.filter(p => p.gender === "female" && !p.isDeceased).map(p =>
             <option key={p._id} value={p._id}>{p.name}</option>
           )}
         </select>
 
-        <select className="control w-full" value={childId} onChange={e => setChildId(e.target.value)}>
+        <select
+          className="control w-full"
+          value={childId}
+          onChange={e => setChildId(e.target.value)}
+          disabled={!!spouseId}
+        >
           <option value="">Add as parent of (optional)</option>
           {persons.filter(p => !p.isDeceased).map(p =>
             <option key={p._id} value={p._id}>{p.name}</option>

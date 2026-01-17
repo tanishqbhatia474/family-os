@@ -2,7 +2,9 @@ import {
   addPersonService,setFatherService,
   setMotherService,
   addChildService,
-  getFamilyPersonsService,getFamilyTreeService
+  getFamilyPersonsService,getFamilyTreeService,
+  addSpouseService,
+  removeSpouseService
 } from '../services/person.service.js';
 
 export const addPerson = async (req, res, next) => {
@@ -79,6 +81,32 @@ export const addChild = async (req, res, next) => {
       req.body.role // "father" or "mother"
     );
     res.json(person);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const addSpouse = async (req, res, next) => {
+  try {
+    const result = await addSpouseService(
+      req.user,
+      req.params.personId,
+      req.body.spouseId
+    );
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const removeSpouse = async (req, res, next) => {
+  try {
+    const result = await removeSpouseService(
+      req.user,
+      req.params.personId,
+      req.body.spouseId
+    );
+    res.json(result);
   } catch (err) {
     next(err);
   }

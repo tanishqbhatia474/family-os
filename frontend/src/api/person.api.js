@@ -21,3 +21,9 @@ export const setFather = (childId, fatherId) =>
 
 export const setMother = (childId, motherId) =>
   http.patch(`/person/${childId}/set-mother`, { motherId });
+
+export const addSpouse = (personId, spouseId) =>
+  http.patch(`/person/${personId}/add-spouse`, { spouseId });
+
+export const removeSpouse = (personId, spouseId) =>
+  http.patch(`/person/${personId}/remove-spouse`, { spouseId });

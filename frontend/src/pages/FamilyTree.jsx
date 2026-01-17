@@ -1,230 +1,120 @@
-// import { useEffect, useState, useRef } from "react";
-// import Tree from "react-d3-tree";
-// import { getFamilyTree } from "../api/person.api";
-// import { transformToD3Tree } from "../utils/treeTransform";
-// import AddPerson from "../pages/FamilyTree/AddPerson";
-// import PersonProfileModal from "../components/family-tree/PersonProfileModal";
-
-// /* ---------- Custom Node Renderer ---------- */
-// const renderCustomNode = (onSelect) => ({ nodeDatum }) => {
-//   if (!nodeDatum || nodeDatum.name === "__root__") return null;
-
-//    const isDeceased = nodeDatum.raw?.isDeceased;
-
-//   return (
-//     <g
-//       onClick={() => {
-//         // console.log("Clicked ID:", nodeDatum.id);
-//         onSelect(nodeDatum.raw);
-//       }}
-//       style={{ cursor: "pointer" }}
-//     >
-//        <rect
-//           width="170"
-//           height="44"
-//           x="-85"
-//           y="-22"
-//           rx="12"
-//           fill={isDeceased ? "#5f7f74" : "#184c3e"}
-//           stroke={isDeceased ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.08)"}
-//           strokeWidth="1"
-//         />
-//         <text
-//           x="0"
-//           y="1"
-//           textAnchor="middle"
-//           alignmentBaseline="middle"
-//           fontSize="13"
-//           fill={isDeceased ? "#e5e7eb" : "#ffffff"}
-//           style={{
-//             fontFamily:
-//               "Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-//             fontWeight: 400,          // consistent everywhere
-//             letterSpacing: "0.25px",
-//             paintOrder: "stroke",
-//             stroke: "transparent",
-//             strokeWidth: 0,
-//             dominantBaseline: "middle",
-//             pointerEvents: "none",
-//           }}
-//         >
-//           {nodeDatum.name}
-//         </text>
-//     </g>
-//   );
-// };
-
-
-// /* ---------- Family Tree Page ---------- */
-// export default function FamilyTree() {
-//   const [treeData, setTreeData] = useState(null);
-//   const containerRef = useRef(null);
-//   const [translate, setTranslate] = useState({ x: 0, y: 0 });
-
-//   // This state MUST live inside the component (Rules of Hooks).
-//   // This enables node click → modal workflows.
-//   const [selectedPerson, setSelectedPerson] = useState(null);
-//   const [personMap, setPersonMap] = useState({});
-
-//   /* ✅ SINGLE SOURCE OF TRUTH */
-//   const fetchTree = async () => {
-//     const res = await getFamilyTree();
-//     console.log("RAW TREE FROM BACKEND:", res.data);
-
-//     // Build person map for easy lookup
-//     const map = {};
-//     res.data.forEach(person => {
-//       map[person._id] = person;
-//     });
-
-//     setPersonMap(map);
-
-//     setTreeData({
-//       name: "__root__",
-//       children: res.data.map(transformToD3Tree),
-//     });
-//   };
-
-
-//   /* initial load */
-//   useEffect(() => {
-//     fetchTree();
-//   }, []);
-
-//   /* center tree */
-//   useEffect(() => {
-//     if (!containerRef.current) return;
-
-//     const rect = containerRef.current.getBoundingClientRect();
-//     setTranslate({
-//       x: rect.width / 2,
-//       y: 20,
-//     });
-//   }, [treeData]);
-
-//   if (!treeData) return null;
-
-//   return (
-//     <div className="max-w-7xl mx-auto px-6 py-10">
-//       <div className="mb-10 text-center">
-//         <h1 className="text-2xl font-medium">Family Tree</h1>
-//         <p className="text-sm text-neutral-500">
-//           Family lineage and relationships
-//         </p>
-//       </div>
-
-//       {/* Honor-only panel (handled internally in AddPerson) */}
-//       <div className="mb-8">
-//         <AddPerson onPersonAdded={fetchTree} />
-//       </div>
-
-//       <div
-//         ref={containerRef}
-//         className="relative h-[75vh] w-full overflow-hidden
-//                    bg-[rgba(150,170,155,0.18)]"
-//       >
-//         <div className="absolute inset-0 bg-[rgba(150,170,155,0.22)] pointer-events-none" />
-
-//         <Tree
-//           data={treeData}
-//           orientation="vertical"
-//           translate={translate}
-//           separation={{ siblings: 2.2, nonSiblings: 3 }}
-//           renderCustomNodeElement={renderCustomNode(setSelectedPerson)}
-
-//           pathFunc="step"
-//           draggable
-
-//           // zoomable={false} disables drag internally in react-d3-tree.
-//           // Recommendation:
-//           // zoomable={true}
-//           // zoom={1}
-//           // scaleExtent={{ min: 1, max: 1 }}
-//           // This keeps drag ON but prevents zooming.
-//           zoomable={false}
-
-//           collapsible={false}
-//           pathClassFunc={({ source }) =>
-//             source.data.name === "__root__" ? "hidden-link" : "tree-link"
-//           }
-//           styles={{
-//             links: {
-//               stroke: "#9ca3af",
-//               strokeWidth: 1,
-//             },
-//           }}
-//         />
-
-//         {selectedPerson && (
-//           <PersonProfileModal
-//             person={selectedPerson}
-//             personMap={personMap} 
-//             onClose={() => setSelectedPerson(null)}
-//             onSaved={fetchTree}
-//           />
-//         )}
-
-//       </div>
-//     </div>
-//   );
-// }
-
-// frontend/src/pages/FamilyTree.jsx
 import { useEffect, useState, useRef } from "react";
 import Tree from "react-d3-tree";
 import { getFamilyTree } from "../api/person.api";
 import { getFamilyDetails } from "../api/family.api";
 import { transformToD3Tree } from "../utils/treeTransform";
-import AddPerson from "../pages/FamilyTree/AddPerson";
+import AddPerson from "./FamilyTree/AddPerson";
 import PersonProfileModal from "../components/family-tree/PersonProfileModal";
 
-/* ---------- Custom Node Renderer ---------- */
-const renderCustomNode = (onSelect) => ({ nodeDatum }) => {
-  if (!nodeDatum || nodeDatum.name === "__root__") return null;
+/* ======================================================
+   GROUP SPOUSES (IMMUTABLE, SAFE)
+====================================================== */
+function groupSpouses(node, personMap) {
+  if (!node || !node.children) return node;
 
-  const isDeceased = nodeDatum.raw?.isDeceased;
+  return {
+    ...node,
+    children: node.children.map(child => {
+      const raw = child.raw;
 
-  return (
-    <g
-      onClick={() => onSelect(nodeDatum.raw)}
-      style={{ cursor: "pointer" }}
-    >
-      <rect
-          width="170"
-          height="44"
-          x="-85"
-          y="-22"
-          rx="12"
-          fill={isDeceased ? "#5f7f74" : "#184c3e"}
-          stroke={isDeceased ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.08)"}
-          strokeWidth="1"
-        />
-        <text
-          x="0"
-          y="1"
-          textAnchor="middle"
-          alignmentBaseline="middle"
-          fontSize="13"
-          fill={isDeceased ? "#e5e7eb" : "#ffffff"}
-          style={{
-            fontFamily:
-              "Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-            fontWeight: 400,          // consistent everywhere
-            letterSpacing: "0.25px",
-            paintOrder: "stroke",
-            stroke: "transparent",
-            strokeWidth: 0,
-            dominantBaseline: "middle",
-            pointerEvents: "none",
-          }}
+      if (!raw || child._groupedSpouses) return child;
+
+      const spouses = (raw.spouseIds || [])
+        .map(id => personMap[id])
+        .filter(
+          spouse =>
+            spouse &&
+            spouse._id !== raw._id
+        );
+
+      const updatedChild = {
+        ...child,
+        spouses,
+        _groupedSpouses: true
+      };
+
+      return groupSpouses(updatedChild, personMap);
+    })
+  };
+}
+
+/* ======================================================
+   CUSTOM NODE RENDERER
+====================================================== */
+const renderCustomNode =
+  (onSelect, personMap) =>
+  ({ nodeDatum }) => {
+    if (!nodeDatum || nodeDatum.name === "__root__") return null;
+
+    const isDeceased = nodeDatum.raw?.isDeceased;
+    const spouses = nodeDatum.spouses || [];
+
+    return (
+      <g>
+        {/* MAIN PERSON */}
+        <g
+          onClick={() => onSelect(personMap[nodeDatum.raw._id])}
+          style={{ cursor: "pointer" }}
         >
-          {nodeDatum.name}
-        </text>
-    </g>
-  );
-};
+          <rect
+            width="170"
+            height="44"
+            x="-85"
+            y="-22"
+            rx="12"
+            fill={isDeceased ? "#5f7f74" : "#184c3e"}
+            stroke="rgba(0,0,0,0.08)"
+          />
+          <text
+            x="0"
+            y="1"
+            textAnchor="middle"
+            alignmentBaseline="middle"
+            fontSize="13"
+            fill="#ffffff"
+            style={{ pointerEvents: "none" }}
+          >
+            {nodeDatum.name}
+          </text>
+        </g>
 
+        {/* SPOUSES */}
+        {spouses.map((spouse, idx) => (
+          <g
+            key={spouse._id}
+            onClick={() => onSelect(personMap[spouse._id])}
+            style={{ cursor: "pointer" }}
+            transform={`translate(${(idx + 1) * 180}, 0)`}
+          >
+            <rect
+              width="170"
+              height="44"
+              x="-85"
+              y="-22"
+              rx="12"
+              fill={spouse.isDeceased ? "#5f7f74" : "#184c3e"}
+              stroke="rgba(0,0,0,0.08)"
+            />
+            <text
+              x="0"
+              y="1"
+              textAnchor="middle"
+              alignmentBaseline="middle"
+              fontSize="13"
+              fill="#ffffff"
+              style={{ pointerEvents: "none" }}
+            >
+              {spouse.name}
+            </text>
+          </g>
+        ))}
+      </g>
+    );
+  };
 
+/* ======================================================
+   FAMILY TREE PAGE
+====================================================== */
 export default function FamilyTree() {
   const [treeData, setTreeData] = useState(null);
   const [inviteCode, setInviteCode] = useState(null);
@@ -234,21 +124,31 @@ export default function FamilyTree() {
   const containerRef = useRef(null);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
 
-  /* ---------- SINGLE SOURCE OF TRUTH ---------- */
+  /* ======================================================
+     FETCH TREE (SINGLE SOURCE OF TRUTH)
+  ====================================================== */
   const fetchTree = async () => {
     const res = await getFamilyTree();
 
     const map = {};
-    res.data.forEach(p => {
-      map[p._id] = p;
-    });
-
+    res.data.forEach(p => (map[p._id] = p));
     setPersonMap(map);
 
-    setTreeData({
-      name: "__root__",
-      children: res.data.map(transformToD3Tree),
+    // 🚫 Remove spouses from being top-level anchors
+    const spouseIds = new Set();
+    res.data.forEach(p => {
+      (p.spouseIds || []).forEach(id => spouseIds.add(id));
     });
+
+    const roots = res.data.filter(p => !spouseIds.has(p._id));
+
+    let tree = {
+      name: "__root__",
+      children: roots.map(transformToD3Tree)
+    };
+
+    tree = groupSpouses(tree, map);
+    setTreeData(tree);
   };
 
   const fetchFamilyDetails = async () => {
@@ -268,7 +168,7 @@ export default function FamilyTree() {
   useEffect(() => {
     if (!containerRef.current || !treeData) return;
     const rect = containerRef.current.getBoundingClientRect();
-    setTranslate({ x: rect.width / 2, y: 20 });
+    setTranslate({ x: rect.width / 2, y: 40 });
   }, [treeData]);
 
   if (!treeData) return null;
@@ -291,36 +191,31 @@ export default function FamilyTree() {
 
       <div
         ref={containerRef}
-        className="
-          relative h-[75vh] w-full overflow-hidden
-          bg-[var(--panel)]
-          border border-[var(--border)]
-          rounded-lg
-        "
+        className="relative h-[75vh] w-full overflow-hidden bg-[var(--panel)] border rounded-lg"
       >
-        {/* background overlay (restored) */}
-        <div className="absolute inset-0 bg-[rgba(150,170,155,0.22)] pointer-events-none" />
-
-          <Tree
+        <Tree
           data={treeData}
           orientation="vertical"
           translate={translate}
           separation={{ siblings: 2.2, nonSiblings: 3 }}
-          renderCustomNodeElement={renderCustomNode(setSelectedPerson)}
-
+          renderCustomNodeElement={renderCustomNode(
+            setSelectedPerson,
+            personMap
+          )}
           pathFunc="step"
           draggable
           zoomable={false}
-
           collapsible={false}
           pathClassFunc={({ source }) =>
-            source.data.name === "__root__" ? "hidden-link" : "tree-link"
+            source.data.name === "__root__"
+              ? "hidden-link"
+              : "tree-link"
           }
           styles={{
             links: {
               stroke: "#9ca3af",
-              strokeWidth: 1,
-            },
+              strokeWidth: 1
+            }
           }}
         />
 

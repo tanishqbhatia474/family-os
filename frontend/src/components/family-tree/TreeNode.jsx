@@ -1,59 +1,66 @@
-export default function TreeNode({ person }) {
+export default function TreeNode({ person, onSelect }) {
   const isDeceased = person.isDeceased;
 
   return (
     <div className="pl-6 relative">
       {/* connector line */}
       <div
-        className="
-          absolute left-0 top-0 h-full w-px
-          opacity-40
-        "
+        className="absolute left-0 top-0 h-full w-px opacity-40"
         style={{
           backgroundColor: isDeceased
             ? "var(--muted)"
-            : "var(--accent)"
+            : "var(--accent)",
+          pointerEvents: "none",
         }}
       />
 
-      {/* node */}
-      <div
+      {/* NODE (CLICKABLE) */}
+      <button
+        type="button"
+        onClick={() => onSelect?.(person)}
         className="
-          inline-block
-          px-4 py-2
+          relative
+          z-10
+          inline-flex
+          flex-col
+          px-4
+          py-2
           rounded-md
-          border
-          backdrop-blur-sm
+          text-left
         "
         style={{
-          backgroundColor: "var(--panel)",
-          borderColor: "var(--border)",
-          color: "var(--text)",
-          opacity: isDeceased ? 0.7 : 1
+          backgroundColor: "var(--accent)",
+          color: "var(--bg)",
+          opacity: isDeceased ? 0.55 : 1,
+          cursor: "pointer",
         }}
       >
-        <p
-          className="text-sm font-medium"
-          style={{ color: "var(--text)" }}
-        >
+        <span className="text-sm font-medium leading-tight">
           {person.name}
-        </p>
+        </span>
 
         {isDeceased && (
-          <p
+          <span
             className="text-xs italic mt-0.5"
-            style={{ color: "var(--muted)" }}
+            style={{
+              color: "var(--bg)",
+              opacity: 0.85,
+            }}
           >
             Deceased
-          </p>
+          </span>
         )}
-      </div>
+      </button>
 
-      {/* children */}
+      {/* CHILDREN */}
       {person.children?.length > 0 && (
         <div className="mt-6 space-y-6">
-          {person.children.map((child) => (
-            <TreeNode key={child._id} person={child} />
+          {person.children.map(child => (
+            <TreeNode
+              key={child._id}
+              person={child}
+              onSelect={onSelect}
+            />
           ))}
         </div>
       )}

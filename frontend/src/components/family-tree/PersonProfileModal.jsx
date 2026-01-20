@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import EditPersonModal from "./EditPersonModal";
 
-const formatDate = (date) =>
+const formatDate = date =>
   date
     ? new Date(date).toLocaleDateString(undefined, {
         day: "2-digit",
         month: "short",
-        year: "numeric",
+        year: "numeric"
       })
     : "—";
 
@@ -15,7 +15,7 @@ export default function PersonProfileModal({
   person,
   personMap,
   onClose,
-  onSaved,
+  onSaved
 }) {
   const { user } = useAuth();
   const isHonor = user?.isHonor;
@@ -25,6 +25,9 @@ export default function PersonProfileModal({
 
   const father = person.fatherId ? personMap[person.fatherId] : null;
   const mother = person.motherId ? personMap[person.motherId] : null;
+  const spouses = (person.spouseIds || [])
+    .map(id => personMap[id])
+    .filter(Boolean);
 
   return (
     <div
@@ -40,7 +43,7 @@ export default function PersonProfileModal({
           <h2 className="card-title text-lg">{person.name}</h2>
           <button
             onClick={onClose}
-            className="text-sm opacity-70 hover:opacity-100 cursor-pointer"
+            className="opacity-70 hover:opacity-100"
           >
             ✕
           </button>
@@ -51,13 +54,29 @@ export default function PersonProfileModal({
           <Section title="Basic Information">
             <Row label="Gender" value={person.gender || "—"} />
             <Row label="Date of Birth" value={formatDate(person.birthDate)} />
-            <Row label="Status" value={person.isDeceased ? "Deceased" : "Alive"} />
+            <Row
+              label="Status"
+              value={person.isDeceased ? "Deceased" : "Alive"}
+            />
           </Section>
 
           <Section title="Family">
             <Row label="Father" value={father?.name || "—"} />
             <Row label="Mother" value={mother?.name || "—"} />
-            <Row label="Children" value={person.children?.length || 0} />
+
+            <Row
+              label="Spouse(s)"
+              value={
+                spouses.length > 0
+                  ? spouses.map(s => s.name).join(", ")
+                  : "—"
+              }
+            />
+
+            <Row
+              label="Children"
+              value={person.children?.length || 0}
+            />
           </Section>
         </div>
 
@@ -65,10 +84,10 @@ export default function PersonProfileModal({
         {isHonor && (
           <button
             onClick={() => setShowEdit(true)}
-            className="w-full py-2 rounded text-sm font-medium cursor-pointer"
+            className="w-full py-2 rounded text-sm font-medium"
             style={{
               backgroundColor: "var(--accent)",
-              color: "var(--bg)",
+              color: "var(--bg)"
             }}
           >
             Edit Details
@@ -77,22 +96,19 @@ export default function PersonProfileModal({
 
         <button
           onClick={onClose}
-          className="w-full py-2 text-sm opacity-70 hover:opacity-100 cursor-pointer"
+          className="w-full py-2 text-sm opacity-70 hover:opacity-100"
         >
           Close
         </button>
 
+        {/* Edit Modal */}
         {showEdit && (
           <EditPersonModal
             person={person}
-            onClose={() => {
-              setShowEdit(false);
-              onClose();
-            }}
+            onClose={() => setShowEdit(false)}
             onSaved={async () => {
-              if (onSaved) await onSaved();
+              await onSaved?.();
               setShowEdit(false);
-              onClose();
             }}
           />
         )}
@@ -114,9 +130,9 @@ function Section({ title, children }) {
 
 function Row({ label, value }) {
   return (
-    <div className="flex justify-between text-sm">
+    <div className="flex justify-between text-sm gap-4">
       <span className="row-label">{label}</span>
-      <span className="row-value">{value}</span>
+      <span className="row-value text-right">{value}</span>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-// frontend/src/pages/FamilyTree/AddPerson.jsx
 import { useEffect, useState } from "react";
 import {
   addPerson,
@@ -12,10 +11,27 @@ import { toast } from "sonner";
 import { Check, Copy } from "lucide-react";
 
 /* ---------- Helpers ---------- */
-  const isOlder = (olderDob, youngerDob) => {
-    if (!olderDob || !youngerDob) return false;
-    return new Date(olderDob).getTime() < new Date(youngerDob).getTime();
-  };
+const isOlder = (olderDob, youngerDob) => {
+  if (!olderDob || !youngerDob) return true;
+  return new Date(olderDob) < new Date(youngerDob);
+};
+
+const isReasonableSpouseAge = (a, b) => {
+  if (!a || !b) return true;
+  return Math.abs(
+    new Date(a).getFullYear() - new Date(b).getFullYear()
+  ) <= 40;
+};
+
+const isDirectRelative = (a, b) => {
+  if (!a || !b) return false;
+  return (
+    a._id === b.fatherId ||
+    a._id === b.motherId ||
+    b._id === a.fatherId ||
+    b._id === a.motherId
+  );
+};
 
 export default function AddPerson({ inviteCode, onPersonAdded }) {
   const { user } = useAuth();
@@ -35,103 +51,116 @@ export default function AddPerson({ inviteCode, onPersonAdded }) {
   const [isDeceased, setIsDeceased] = useState(false);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [error, setError] = useState("");
 
-  useEffect(() => {
-    getFamilyPersons().then(res => setPersons(res.data));
-  }, []);
+  const fetchPersons = async () => {
+    const res = await getFamilyPersons();
+    setPersons(res.data);
+  };
 
-  // Mutual exclusivity: clear conflicting fields
-  useEffect(() => {
-    if (spouseId) {
-      if (fatherId) setFatherId("");
-      if (motherId) setMotherId("");
-      if (childId) setChildId("");
-    }
-  }, [spouseId]);
+useEffect(() => {
+  fetchPersons();
+}, []);
 
-  useEffect(() => {
-    if (fatherId || motherId || childId) {
-      if (spouseId) setSpouseId("");
-    }
-  }, [fatherId, motherId, childId]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    setError("");
 
-    if (!name.trim()) return setError("Name is required");
-    if (!gender) return setError("Gender is required");
-    if (!birthDate) return setError("Birth date is required");
+    if (!name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+    if (!gender) {
+      toast.error("Gender is required");
+      return;
+    }
+    if (!birthDate) {
+      toast.error("Birth date is required");
+      return;
+    }
 
     const birth = new Date(birthDate);
 
-    // Only run parent/child validation if spouse is not selected
-    if (!spouseId) {
-      /* ---------- Father validation ---------- */
-      if (fatherId) {
-        const father = persons.find(p => p._id === fatherId);
-        if (!father) return setError("Invalid father selected");
-        if (father.gender !== "male")
-          return setError("Father must be male");
-        if (!father.birthDate || !isOlder(father.birthDate, birth))
-          return setError("Father must be older than the child");
-        if (father.isDeceased)
-          return setError("Deceased person cannot be a parent");
-      }
-
-      /* ---------- Mother validation ---------- */
-      if (motherId) {
-        const mother = persons.find(p => p._id === motherId);
-        if (!mother) return setError("Invalid mother selected");
-        if (mother.gender !== "female")
-          return setError("Mother must be female");
-        if (!mother.birthDate || !isOlder(mother.birthDate, birth))
-          return setError("Mother must be older than the child");
-        if (mother.isDeceased)
-          return setError("Deceased person cannot be a parent");
-      }
-
-      /* ---------- Add as parent of ---------- */
-      if (childId) {
-        const child = persons.find(p => p._id === childId);
-        if (!child) return setError("Invalid child selected");
-        if (!child.birthDate || !isOlder(birth, child.birthDate))
-          return setError("Parent must be older than the selected child");
-        if (isDeceased)
-          return setError("Deceased person cannot be a parent");
-      }
+    /* ---------- PARENT VALIDATION ---------- */
+    if (fatherId) {
+      const father = persons.find(p => p._id === fatherId);
+      if (!father) return toast.error("Invalid father selected");
+      if (father.gender !== "male")
+        return toast.error("Father must be male");
+      if (father.isDeceased)
+        return toast.error("Deceased person cannot be a parent");
+      if (!isOlder(father.birthDate, birth))
+        return toast.error("Father must be older than the child");
     }
+
+    if (motherId) {
+      const mother = persons.find(p => p._id === motherId);
+      if (!mother) return toast.error("Invalid mother selected");
+      if (mother.gender !== "female")
+        return toast.error("Mother must be female");
+      if (mother.isDeceased)
+        return toast.error("Deceased person cannot be a parent");
+      if (!isOlder(mother.birthDate, birth))
+        return toast.error("Mother must be older than the child");
+    }
+
+    /* ---------- CHILD VALIDATION ---------- */
+    if (childId) {
+      const child = persons.find(p => p._id === childId);
+      if (!child) return toast.error("Invalid child selected");
+      if (!isOlder(birth, child.birthDate))
+        return toast.error("Parent must be older than the child");
+      if (isDeceased)
+        return toast.error("Deceased person cannot be a parent");
+    }
+
+    /* ---------- SPOUSE VALIDATION ---------- */
+    if (spouseId) {
+      const spouse = persons.find(p => p._id === spouseId);
+      if (!spouse) return toast.error("Invalid spouse selected");
+      if (spouse.isDeceased)
+        return toast.error("Cannot marry a deceased person");
+      if (!isReasonableSpouseAge(spouse.birthDate, birthDate))
+        return toast.error("Unrealistic age gap between spouses");
+      if (isDirectRelative(spouse, { _id: "NEW", fatherId, motherId }))
+        return toast.error("Cannot add spouse who is a direct relative");
+    }
+
+    const normalizeName = name =>
+    name
+      .trim()
+      .toLowerCase()
+      .replace(/\b\w/g, c => c.toUpperCase());
 
     setLoading(true);
     try {
       const res = await addPerson({
-        name,
+        name: normalizeName(name),
         gender,
         birthDate,
-        fatherId: spouseId ? null : fatherId || null,
-        motherId: spouseId ? null : motherId || null,
+        fatherId: fatherId || null,
+        motherId: motherId || null,
         isDeceased
       });
 
-      const newPersonId = res.data?._id;
+      const newId = res.data?._id;
 
-      // Attach as parent if needed
-      if (!spouseId && childId && newPersonId) {
+      if (childId && newId) {
         if (gender === "male") {
-          await setFather(childId, { fatherId: newPersonId });
+          await setFather(childId, { fatherId: newId });
+          toast.success("Father linked to child");
         }
         if (gender === "female") {
-          await setMother(childId, { motherId: newPersonId });
+          await setMother(childId, { motherId: newId });
+          toast.success("Mother linked to child");
         }
       }
 
-      // Attach as spouse if needed
-      if (spouseId && newPersonId) {
-        await addSpouse(newPersonId, spouseId);
+      if (spouseId && newId) {
+        await addSpouse(newId, spouseId);
+        toast.success("Spouse relationship created");
       }
 
-      toast.success("Family member added");
+      toast.success("Family member added successfully");
 
       setName("");
       setGender("");
@@ -147,7 +176,9 @@ export default function AddPerson({ inviteCode, onPersonAdded }) {
       setPersons(updated.data);
 
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to add person");
+      toast.error(
+        err?.response?.data?.message || "Failed to add person"
+      );
     } finally {
       setLoading(false);
     }
@@ -155,7 +186,6 @@ export default function AddPerson({ inviteCode, onPersonAdded }) {
 
   return (
     <div className="max-w-xl space-y-4">
-
       {inviteCode && (
         <div
           className="flex items-center justify-between rounded-md px-4 py-2 text-sm"
@@ -163,7 +193,6 @@ export default function AddPerson({ inviteCode, onPersonAdded }) {
         >
           <span>Invite code: <b>{inviteCode}</b></span>
           <button
-            type="button"
             onClick={() => {
               navigator.clipboard.writeText(inviteCode);
               setCopied(true);
@@ -179,68 +208,40 @@ export default function AddPerson({ inviteCode, onPersonAdded }) {
       )}
 
       <h2 className="text-lg font-semibold">Add Family Member</h2>
-      {error && <p className="text-sm text-red-500">{error}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <input className="control w-full" placeholder="Full name" value={name} onChange={e => setName(e.target.value)} />
         <input className="control w-full" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} />
+
         <select className="control w-full" value={gender} onChange={e => setGender(e.target.value)}>
           <option value="">Select gender</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
         </select>
 
-        <select
-          className="control w-full"
-          value={spouseId}
-          onChange={e => setSpouseId(e.target.value)}
-          disabled={!!fatherId || !!motherId || !!childId}
-        >
-          <option value="">Add as spouse of (optional)</option>
-          {persons
-            .filter(p =>
-              !p.isDeceased &&
-              p._id !== "" &&
-              p._id !== undefined &&
-              p._id !== null &&
-              (!p.spouseIds || p.spouseIds.length === 0)
-            )
-            .map(p => (
-              <option key={p._id} value={p._id}>{p.name}</option>
-            ))}
-        </select>
-
-        <select
-          className="control w-full"
-          value={fatherId}
-          onChange={e => setFatherId(e.target.value)}
-          disabled={!!spouseId}
-        >
+        <select className="control w-full" value={fatherId} onChange={e => setFatherId(e.target.value)}>
           <option value="">Select father (optional)</option>
           {persons.filter(p => p.gender === "male" && !p.isDeceased).map(p =>
             <option key={p._id} value={p._id}>{p.name}</option>
           )}
         </select>
 
-        <select
-          className="control w-full"
-          value={motherId}
-          onChange={e => setMotherId(e.target.value)}
-          disabled={!!spouseId}
-        >
+        <select className="control w-full" value={motherId} onChange={e => setMotherId(e.target.value)}>
           <option value="">Select mother (optional)</option>
           {persons.filter(p => p.gender === "female" && !p.isDeceased).map(p =>
             <option key={p._id} value={p._id}>{p.name}</option>
           )}
         </select>
 
-        <select
-          className="control w-full"
-          value={childId}
-          onChange={e => setChildId(e.target.value)}
-          disabled={!!spouseId}
-        >
+        <select className="control w-full" value={childId} onChange={e => setChildId(e.target.value)}>
           <option value="">Add as parent of (optional)</option>
+          {persons.filter(p => !p.isDeceased).map(p =>
+            <option key={p._id} value={p._id}>{p.name}</option>
+          )}
+        </select>
+
+        <select className="control w-full" value={spouseId} onChange={e => setSpouseId(e.target.value)}>
+          <option value="">Add spouse (optional)</option>
           {persons.filter(p => !p.isDeceased).map(p =>
             <option key={p._id} value={p._id}>{p.name}</option>
           )}

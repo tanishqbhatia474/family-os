@@ -155,6 +155,60 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
   };
 
   /* ======================================================
+    ADD AS PARENT OF (NEW)
+  ====================================================== */
+
+  const [childIdToLink, setChildIdToLink] = useState("");
+
+  const eligibleChildren = persons.filter(p => {
+    if (p._id === person._id) return false;
+
+    // Male can be added as father if child has no father
+    if (person.gender === "male") {
+      return !p.fatherId;
+    }
+
+    // Female can be added as mother if child has no mother
+    if (person.gender === "female") {
+      return !p.motherId;
+    }
+
+    return false;
+  });
+
+  const handleAddAsParentOf = async () => {
+    const child = persons.find(p => p._id === childIdToLink);
+    if (!child) return toast.error("Invalid child selection");
+
+    if (person._id === child._id)
+      return toast.error("A person cannot be their own parent");
+
+    if (!isParentOlderThanChild(person.birthDate, child.birthDate))
+      return toast.error("Parent must be older than child");
+
+    try {
+      if (person.gender === "male") {
+        if (child.fatherId)
+          return toast.error("Child already has a father");
+        await setFather(child._id, person._id);
+      } else if (person.gender === "female") {
+        if (child.motherId)
+          return toast.error("Child already has a mother");
+        await setMother(child._id, person._id);
+      } else {
+        return toast.error("Parent gender must be male or female");
+      }
+
+      toast.success(`${person.name} linked as parent`);
+      setChildIdToLink("");
+      await onSaved?.();
+    } catch {
+      toast.error("Failed to link parent");
+    }
+  };
+
+
+  /* ======================================================
      SAVE (WITH CONFIRMATION)
   ====================================================== */
   const handleSave = async () => {
@@ -247,15 +301,93 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
           )}
         </select>
 
+        {/* ➕ ADD AS PARENT OF */}
+        <div>
+          <label className="section-label">Add as parent of</label>
+          <div className="flex gap-2 mt-1">
+            <select
+              value={childIdToLink}
+              onChange={e => setChildIdToLink(e.target.value)}
+              className="control w-full"
+            >
+              <option value="">Select child</option>
+              {eligibleChildren.map(c => (
+                <option key={c._id} value={c._id}>{c.name}</option>
+              ))}
+            </select>
+
+            <button
+              onClick={handleAddAsParentOf}
+              disabled={!childIdToLink}
+              className="px-3 py-1 rounded"
+              style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}
+            >
+              Link
+            </button>
+          </div>
+        </div>
+
         <div>
           <label className="section-label">Spouse(s)</label>
+
+          {/* Existing spouses */}
+          {currentSpouses.length === 0 && (
+            <p className="text-sm text-[var(--muted)]">No spouse added</p>
+          )}
+
           {currentSpouses.map(s => (
-            <div key={s._id} className="flex justify-between items-center">
+            <div
+              key={s._id}
+              className="flex justify-between items-center"
+            >
               <span>{s.name}</span>
-              <button onClick={() => handleRemoveSpouse(s._id)} className="card-link delete">Remove</button>
+              <button
+                onClick={() => handleRemoveSpouse(s._id)}
+                className="card-link delete"
+              >
+                Remove
+              </button>
             </div>
           ))}
+
+          {/* ➕ ADD SPOUSE */}
+          <div className="flex gap-2 mt-2">
+            <select
+              value={spouseIdToAdd}
+              onChange={e => setSpouseIdToAdd(e.target.value)}
+              className="control w-full"
+              disabled={spouseLoading}
+            >
+              <option value="">Add spouse</option>
+              {eligibleSpouses.map(p => (
+                <option key={p._id} value={p._id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={handleAddSpouse}
+              disabled={!spouseIdToAdd || spouseLoading}
+              className="px-3 py-1 rounded"
+              style={{
+                backgroundColor: "var(--accent)",
+                color: "var(--bg)"
+              }}
+            >
+              Add
+            </button>
+          </div>
         </div>
+
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isDeceased}
+            onChange={e => setIsDeceased(e.target.checked)}
+          />
+          Mark as deceased
+        </label>
 
         <div className="flex justify-end gap-3 pt-2">
           <button onClick={onClose} className="opacity-70">Cancel</button>

@@ -14,6 +14,7 @@ const formatDate = date =>
 export default function PersonProfileModal({
   person,
   personMap,
+  people,
   onClose,
   onSaved
 }) {
@@ -28,6 +29,14 @@ export default function PersonProfileModal({
   const spouses = (person.spouseIds || [])
     .map(id => personMap[id])
     .filter(Boolean);
+
+  const children = Array.isArray(people)
+    ? people.filter(
+        p =>
+          p.fatherId === person._id ||
+          p.motherId === person._id
+      )
+    : [];
 
   return (
     <div
@@ -75,7 +84,7 @@ export default function PersonProfileModal({
 
             <Row
               label="Children"
-              value={person.children?.length || 0}
+              value={children.length}
             />
           </Section>
         </div>

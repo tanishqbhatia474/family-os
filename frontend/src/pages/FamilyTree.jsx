@@ -1,132 +1,74 @@
-import { useEffect, useState } from "react";
-import { getFamilyTree } from "../api/person.api";
+import { useEffect, useState, useMemo } from "react";
+import { getFamilyPersons } from "../api/person.api";
 import { getFamilyDetails } from "../api/family.api";
-import AddPerson from "./FamilyTree/AddPerson";
+
+import AddPerson from "../pages/FamilyTree/AddPerson";
 import PersonProfileModal from "../components/family-tree/PersonProfileModal";
-import TreeNode from "../components/family-tree/TreeNode";
+import SvgFamilyTree from "../components/family-tree/SvgFamilyTree";
 
-/* ======================================================
-   BLOODLINE LOGIC (ANCESTRY MODEL)
-====================================================== */
-
-function buildBloodlineSet(people) {
-  const bloodline = new Set();
-
-  // 1. Anyone with parents is bloodline
-  people.forEach(p => {
-    if (p.fatherId || p.motherId) {
-      bloodline.add(p._id);
-      if (p.fatherId) bloodline.add(p.fatherId);
-      if (p.motherId) bloodline.add(p.motherId);
-    }
-  });
-
-  // 2. Anyone who is a parent is bloodline
-  people.forEach(p => {
-    const isParent = people.some(
-      c => c.fatherId === p._id || c.motherId === p._id
-    );
-    if (isParent) bloodline.add(p._id);
-  });
-
-  // 3. BOOTSTRAP RULE (no ancestry yet → married couple)
-  if (bloodline.size === 0) {
-    const married = people.find(p => (p.spouseIds || []).length > 0);
-    if (married) {
-      bloodline.add(married._id);
-      married.spouseIds.forEach(id => bloodline.add(id));
-    }
-  }
-
-  return bloodline;
-}
-
-function findRoots(people, bloodline) {
-  return people.filter(
-    p =>
-      bloodline.has(p._id) &&
-      !p.fatherId &&
-      !p.motherId
-  );
-}
-
-if (roots.length === 0 && honorPerson) {
-  roots = [honorPerson];
-}
-
+import { buildFamilyTree } from "../components/family-tree/treeBuilder";
 
 export default function FamilyTree() {
   const [people, setPeople] = useState([]);
   const [inviteCode, setInviteCode] = useState(null);
   const [selectedPerson, setSelectedPerson] = useState(null);
-  const [honorUserId, setHonorUserId] = useState(null);
 
-  const fetchTree = async () => {
-    const res = await getFamilyTree();
-    setPeople(res.data);
-  };
+  /* ---------------- Fetch ---------------- */
 
-  const fetchFamilyDetails = async () => {
+  async function fetchAll() {
     try {
-      const res = await getFamilyDetails();
-      setInviteCode(res.data.inviteCode);
-      setHonorUserId(res.data.honorUserId);
-    } catch {}
-  };
+      const [peopleRes, familyRes] = await Promise.all([
+        getFamilyPersons(),
+        getFamilyDetails()
+      ]);
 
-  useEffect(() => {
-    fetchTree();
-    fetchFamilyDetails();
-  }, []);
-
-  if (!people.length) return null;
-
-  const honorPerson = honorUserId
-    ? people.find(p => p.userId === honorUserId)
-    : null;
-
-  const bloodline = buildBloodlineSet(people);
-  let roots = findRoots(people, bloodline);
-
-  // ✅ CRITICAL FALLBACK
-  if (roots.length === 0 && honorPerson) {
-    roots = [honorPerson];
+      setPeople(Array.isArray(peopleRes.data) ? peopleRes.data : []);
+      setInviteCode(familyRes.data?.inviteCode ?? null);
+    } catch (err) {
+      console.error("Failed to fetch family data", err);
+      setPeople([]);
+    }
   }
 
+  useEffect(() => {
+    fetchAll();
+  }, []);
+
+  /* ---------------- Build recursive tree ---------------- */
+
+  const rootFamily = useMemo(
+    () => buildFamilyTree(people),
+    [people]
+  );
+
+  /* ---------------- Render ---------------- */
+
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
-      {/* header */}
+    <div className="max-w-7xl mx-auto px-6 py-10 space-y-10">
+      {/* Add Person */}
+      <AddPerson
+        inviteCode={inviteCode}
+        onPersonAdded={fetchAll}
+      />
 
-      <div className="mb-8">
-        <AddPerson inviteCode={inviteCode} onPersonAdded={fetchTree} />
+      {/* SVG Family Tree */}
+      <div className="tree-canvas w-full overflow-auto p-4">
+        <SvgFamilyTree
+          rootFamily={rootFamily}
+          onSelectPerson={setSelectedPerson}
+        />
       </div>
 
-      <div
-        className="rounded-xl p-6 space-y-10"
-        style={{
-          backgroundColor: "var(--panel)",
-          boxShadow: "inset 0 0 0 1px var(--border)"
-        }}
-      >
-        {roots.map(root => (
-          <TreeNode
-            key={root._id}
-            person={root}
-            people={people}
-            bloodline={bloodline}
-            onSelect={setSelectedPerson}
-          />
-        ))}
-      </div>
-
+      {/* Person Profile */}
       {selectedPerson && (
         <PersonProfileModal
           person={selectedPerson}
           personMap={Object.fromEntries(
             people.map(p => [p._id, p])
           )}
+          people={people}
           onClose={() => setSelectedPerson(null)}
-          onSaved={fetchTree}
+          onSaved={fetchAll}
         />
       )}
     </div>

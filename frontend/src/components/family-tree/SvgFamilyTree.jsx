@@ -17,6 +17,7 @@
 //   return {
 //     nodes: [],
 //     edges: [],
+//     families: [],
 //     width: 0,
 //     minX: x,
 //     maxX: x,
@@ -80,8 +81,12 @@
 //       person: p,
 //       x: px,
 //       y,
-//       isPrimary: i === 0, 
-//       personAnchorX: px + NODE_WIDTH / 2
+//       isPrimary: i === 0,
+//       personAnchorX: px + NODE_WIDTH / 2,
+
+//       // 🔑 ADD THESE
+//       familyId: node.id,
+//       hasChildren: children.length > 0
 //     };
 //   });
 
@@ -96,6 +101,13 @@
 //   const biologicalAnchorX =
 //   parentNodes.find(p => p.isPrimary)?.personAnchorX ??
 //   personAnchorX;
+
+//   const families = [{
+//     familyId: node.id,
+//     anchorX: biologicalAnchorX,
+//     y,
+//     hasChildren: children.length > 0
+//   }];
 
 //   let nodes = [...parentNodes];
 //   let edges = [];
@@ -179,9 +191,14 @@
 //       edges.push(...cl.edges);
 //     });
 
+//     childLayouts.forEach(cl => {
+//       families.push(...cl.families);
+//     });
+
 //     return {
 //       nodes,
 //       edges,
+//       families,
 //       width: maxX - minX,
 //       minX,
 //       maxX,
@@ -195,6 +212,7 @@
 //   return {
 //     nodes,
 //     edges,
+//     families,
 //     width:
 //       parents.length * NODE_WIDTH +
 //       (parents.length - 1) * 24,
@@ -207,6 +225,36 @@
 //     personAnchorX,
 //     biologicalAnchorX
 //   };
+// }
+
+// function ExpandToggle({ x, y, expanded, onToggle }) {
+//   return (
+//     <g
+//       transform={`translate(${x}, ${y})`}
+//       onClick={onToggle}
+//       style={{ cursor: "pointer" }}
+//     >
+//       {/* background */}
+//       <circle
+//         r={9}
+//         fill="var(--tree-node-bg)"
+//         stroke="var(--tree-line)"
+//         strokeWidth={1.5}
+//       />
+
+//       {/* caret */}
+//       <path
+//         d="M -4 -2 L 4 -2 L 0 4 Z"
+//         fill="var(--tree-text)"
+//         transform={expanded ? "rotate(180 0 0)" : undefined}
+//       />
+
+//       <title>
+//         {expanded ? "Collapse branch" : "Expand branch"}
+//       </title>
+
+//     </g>
+//   );
 // }
 
 // /* =======================
@@ -239,6 +287,10 @@
 //         x1: e.x1 + offsetX,
 //         x2: e.x2 + offsetX
 //       })),
+//       families: raw.families.map(f => ({
+//         ...f,
+//         anchorX: f.anchorX + offsetX
+//       })),
 //       minX: 0,
 //       maxX: viewportWidth
 //     };
@@ -270,24 +322,40 @@
 //       ))}
 
       
+//     {/* nodes */}
 //     {nodes.map((n, i) => (
 //       <PersonNodeSvg
-//         key={i}
+//         key={`node-${i}`}
 //         x={n.x}
 //         y={n.y}
 //         person={n.person}
-//         hasChildren={n.person.children?.length > 0}
-//         expanded={expandedMap[n.person.id] ?? true}
-//         onToggle={toggleNode}
 //         onSelect={onSelectPerson}
 //       />
 //     ))}
+
+//     {/* expand / collapse toggles — ONE PER FAMILY */}
+//     {layout.families.map(fam => {
+//       if (!fam.hasChildren) return null;
+
+//       const expanded = expandedMap[fam.familyId] ?? true;
+
+//       return (
+//         <ExpandToggle
+//           key={fam.familyId}
+//           x={fam.anchorX}
+//           y={fam.y + NODE_HEIGHT + 14}
+//           expanded={expanded}
+//           onToggle={() => toggleNode(fam.familyId)}
+//         />
+//       );
+//     })}
+
 //     </svg>
 //   );
 // }
 
-
 import React, { useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 /* =======================
    Geometry
@@ -597,30 +665,51 @@ export default function SvgFamilyTree({ rootFamily, onSelectPerson }) {
       height={maxY + NODE_HEIGHT + PADDING * 2}
       preserveAspectRatio="xMidYMid meet"
     >
-      {edges.map((e, i) => (
-        <line
-          key={i}
-          x1={e.x1}
-          y1={e.y1}
-          x2={e.x2}
-          y2={e.y2}
-          stroke="var(--tree-line)"
-          strokeWidth={2}
-          strokeLinecap="round"
-        />
-      ))}
+      <AnimatePresence initial={false}>
+        {edges.map((e, i) => (
+          <motion.line
+            key={`edge-${i}-${e.x1}-${e.y1}`}
+            x1={e.x1}
+            y1={e.y1}
+            x2={e.x2}
+            y2={e.y2}
+            stroke="var(--tree-line)"
+            strokeWidth={2}
+            strokeLinecap="round"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.14, ease: "linear" }}
+          />
+        ))}
+      </AnimatePresence>
+
 
       
     {/* nodes */}
-    {nodes.map((n, i) => (
-      <PersonNodeSvg
-        key={`node-${i}`}
-        x={n.x}
-        y={n.y}
-        person={n.person}
-        onSelect={onSelectPerson}
-      />
-    ))}
+    <AnimatePresence initial={false}>
+      {nodes.map((n) => {
+        const expanded =
+          expandedMap[n.familyId] ?? true;
+
+        return (
+          <motion.g
+            key={n.person.id}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
+            <PersonNodeSvg
+              x={n.x}
+              y={n.y}
+              person={n.person}
+              onSelect={onSelectPerson}
+            />
+          </motion.g>
+        );
+      })}
+    </AnimatePresence>
 
     {/* expand / collapse toggles — ONE PER FAMILY */}
     {layout.families.map(fam => {

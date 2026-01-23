@@ -9,8 +9,8 @@
 
   /* app-specific */
 
-  --panel: rgba(255, 255, 255, 0.4);
-  --border: rgba(24, 39, 33, 0.7);
+  --panel: rgba(235, 245, 235, 0.4);
+  --border: rgba(24, 39, 33, 0.15);
   --accent: #1f3d34;
 
    /* 🌳 Tree-specific tokens */
@@ -18,6 +18,28 @@
   --tree-node-border:#1f3d34;
   --tree-line: #1f3d34;
   --tree-text: var(--text);
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 3rem;
+  --text-5xl: 4rem;
+  
+  /* Spacing scale */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2.5rem;
+  --space-xl: 4rem;
+  --space-2xl: 6rem;
+  --space-3xl: 8rem;
+
+  --font-human: "Inter Variable", Inter, system-ui, sans-serif;
+  --font-accent: "Space Grotesk", system-ui, sans-serif;
 }
 
 /* ---------- Dark theme ---------- */
@@ -47,11 +69,12 @@ body,
 }
 
 body {
-  font-family: "Inter Variable", Inter, system-ui, sans-serif;
-  background-color: transparent;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  background-color: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* ---------- Tree helpers ---------- */
@@ -229,9 +252,9 @@ html.dark input[type="date"] {
 /* ---------- Family Tree Container ---------- */
 
 .tree-canvas {
-  background-color: rgb(235, 245, 235, 0.4);
-  /* border: 1px solid var(--border);
+  background-color: rgba(235, 245, 235, 0.4);
   border-radius: 20px;
+  /* border: 1px solid var(--border);
 
   box-shadow:
     inset 0 0 0 1px #1f3d34,
@@ -265,4 +288,48 @@ html.dark .tree-canvas {
 
 .expand-toggle:hover {
   stroke: var(--accent);
+}
+
+/* Base image styling */
+.illustration {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Default (light mode) */
+.light-only {
+  display: block;
+}
+
+.dark-only {
+  display: none;
+}
+
+/* Dark mode override */
+html.dark .light-only {
+  display: none;
+}
+
+html.dark .dark-only {
+  display: block;
+}
+
+@keyframes softFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-on-load {
+  animation: softFadeUp 0.8s ease-out both;
+}
+
+.fade-in-on-load img {
+  animation: softFadeUp 1s ease-out both;
 }

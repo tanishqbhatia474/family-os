@@ -1,88 +1,220 @@
 import FluidBackground from "@/components/visual/FluidBackground";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+
+const fadeUp = {
+  initial: { opacity: 0, y: 20 },
+  whileInView: { opacity: 1, y: 0 },
+  transition: { duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }
+};
+
+const staggerChildren = {
+  initial: {},
+  whileInView: {
+    transition: {
+      staggerChildren: 0.15
+    }
+  }
+};
 
 export default function Dashboard() {
   return (
-    <div className="relative">
-      {/* Hero background */}
+    <div className="relative min-h-screen">
+      {/* Fluid animated background */}
       <FluidBackground />
 
-      {/* Hero content */}
-      <section className="relative z-10 max-w-[680px] px-6 pt-32 pb-24 mx-auto">
-        <h1 className="text-[3.25rem] leading-[1.05] font-medium tracking-tight mb-6 text-[var(--text)]">
-          Welcome
-        </h1>
+      {/* Hero */}
+      <section className="relative z-10 px-6 pt-20 pb-16 md:pt-32 md:pb-24">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Left: Hero text */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, ease: [0.25, 0.1, 0.25, 1] }}
+              className="lg:col-span-7"
+            >
+              <h1 className="text-[clamp(2.5rem,8vw,5.5rem)] leading-[0.95] font-bold tracking-[-0.03em] text-[var(--text)] mb-8">
+                A quiet place
+                <br />
+                for your family's
+                <br />
+                <span className="text-[var(--accent)]">story</span>
+              </h1>
 
-        <p className="text-[1.125rem] leading-relaxed mb-6 text-[var(--muted)]">
-          This is your family’s private space for preserving relationships,
-          important records, and shared traditions over time.
-        </p>
+              <p className="text-[clamp(1.125rem,2vw,1.375rem)] leading-relaxed text-[var(--muted)] max-w-2xl font-normal mb-12">
+                This space begins gently — with your family members,
+                the relationships between them, and the moments that matter.
+                <span className="block mt-4 opacity-80">
+                  It grows over time, at your pace.
+                </span>
+              </p>
 
-        {/* ✅ contextual line */}
-        <p className="text-[0.95rem] leading-relaxed italic max-w-md text-[var(--muted)]">
-          You’re viewing a space that grows quietly with your family.
-        </p>
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  to="/family-tree"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-[var(--accent)] text-white rounded-full font-semibold text-base hover:opacity-90 transition-all hover:gap-3"
+                >
+                  Start with your family tree
+                  <span className="text-xl">→</span>
+                </Link>
+
+                <Link
+                  to="/about"
+                  className="inline-flex items-center gap-2 px-8 py-4 border-2 border-[var(--border)] rounded-full font-medium text-base text-[var(--text)] hover:border-[var(--accent)] transition-all"
+                >
+                  Learn more
+                </Link>
+              </div>
+            </motion.div>
+
+            {/* Right: Hero illustration */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.9, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+              className="lg:col-span-5"
+            >
+              <div
+                className="
+                  rounded-3xl
+                  border border-[var(--border)]
+                  bg-[color-mix(in_srgb,var(--panel)_85%,transparent)]
+                  p-8
+                  fade-in-on-load
+                "
+              >
+                {/* Light mode illustration */}
+                <img
+                  src="/illustrations/living-heritage-light.png"
+                  alt="Your family's living heritage"
+                  className="illustration dark-only w-full"
+                />
+
+                {/* Dark mode illustration */}
+                <img
+                  src="/illustrations/living-heritage-dark.png"
+                  alt="Your family's living heritage"
+                  className="illustration light-only w-full"
+                />
+              </div>
+            </motion.div>
+          </div>
+        </div>
       </section>
 
-      {/* Main content */}
-      <section className="max-w-[680px] mx-auto px-6 space-y-10 pb-32">
-
-        {/* Family Tree */}
-        <div className="card-bg rounded-xl p-6 space-y-4">
-          <h2 className="text-[1.25rem] font-medium text-[var(--text)]">
-            Family Tree
-          </h2>
-
-          <p className="text-[1.05rem] text-[var(--muted)]">
-            View and manage your family structure, relationships, and lineage
-            in one place.
-          </p>
-
-          <Link
-            to="/family-tree"
-            className="text-sm font-medium text-[var(--accent)] hover:opacity-80"
+      {/* Steps */}
+      <section className="relative z-10 px-6 py-24 md:py-20">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            variants={staggerChildren}
+            initial="initial"
+            whileInView="whileInView"
+            viewport={{ once: true, margin: "-100px" }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-x-16 gap-y-20"
           >
-            View family tree →
-          </Link>
+            {/* Step 1 */}
+            <motion.div
+              variants={fadeUp}
+              className="lg:col-span-2 flex gap-10 items-start"
+            >
+              <div className="shrink-0 w-14 h-14 rounded-2xl bg-[var(--accent)] text-white flex items-center justify-center font-bold text-xl shadow-lg">
+                1
+              </div>
+
+              <div className="space-y-5 max-w-3xl">
+                <h2 className="text-[clamp(2rem,4vw,3rem)] font-bold tracking-[-0.02em] text-[var(--text)] leading-tight">
+                  Add your family
+                </h2>
+
+                <p className="text-[1.125rem] leading-relaxed text-[var(--muted)] max-w-xl">
+                  Start with parents, grandparents, siblings, or children.
+                  Your family tree doesn't need to be complete — you can
+                  add and expand it over time.
+                </p>
+
+                <Link
+                  to="/family-tree"
+                  className="inline-flex items-center gap-2 text-base font-semibold text-[var(--accent)] hover:gap-3 transition-all mt-4 group"
+                >
+                  Open family tree
+                  <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
+                </Link>
+
+                <div className="mt-8 h-48 rounded-3xl bg-gradient-to-br from-[color-mix(in_srgb,var(--accent)_20%,transparent)] to-[color-mix(in_srgb,var(--accent)_5%,transparent)] border border-[var(--border)] flex items-center justify-center">
+                  <div className="text-6xl opacity-30">🌳</div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Step 2 */}
+            <motion.div variants={fadeUp} className="flex gap-8 items-start">
+              <div className="shrink-0 w-14 h-14 rounded-2xl bg-[var(--accent)] text-white flex items-center justify-center font-bold text-xl shadow-lg">
+                2
+              </div>
+
+              <div className="space-y-4">
+                <h2 className="text-[clamp(1.75rem,3vw,2.25rem)] font-bold tracking-[-0.02em] text-[var(--text)] leading-tight">
+                  Keep important
+                  <br />
+                  documents safe
+                </h2>
+
+                <p className="text-[1.0625rem] leading-relaxed text-[var(--muted)]">
+                  Store family certificates, records, and important files —
+                  privately, securely, and easy to find when you need them.
+                </p>
+
+                <Link
+                  to="/documents"
+                  className="inline-flex items-center gap-2 text-base font-semibold text-[var(--accent)] hover:gap-3 transition-all mt-3 group"
+                >
+                  Go to documents
+                  <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
+                </Link>
+
+                <div className="mt-6 h-40 rounded-2xl bg-gradient-to-br from-[color-mix(in_srgb,var(--accent)_15%,transparent)] to-transparent border border-[var(--border)] flex items-center justify-center">
+                  <div className="text-5xl opacity-30">📄</div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Step 3 */}
+            <motion.div variants={fadeUp} className="flex gap-8 items-start">
+              <div className="shrink-0 w-14 h-14 rounded-2xl bg-[var(--accent)] text-white flex items-center justify-center font-bold text-xl shadow-lg">
+                3
+              </div>
+
+              <div className="space-y-4">
+                <h2 className="text-[clamp(1.75rem,3vw,2.25rem)] font-bold tracking-[-0.02em] text-[var(--text)] leading-tight">
+                  Capture family rituals
+                  <br />
+                  and traditions
+                </h2>
+
+                <p className="text-[1.0625rem] leading-relaxed text-[var(--muted)]">
+                  Record the moments that repeat — celebrations, habits,
+                  and traditions that shape your family over generations.
+                </p>
+
+                <Link
+                  to="/rituals"
+                  className="inline-flex items-center gap-2 text-base font-semibold text-[var(--accent)] hover:gap-3 transition-all mt-3 group"
+                >
+                  Explore rituals
+                  <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
+                </Link>
+
+                <div className="mt-6 h-40 rounded-2xl bg-gradient-to-br from-[color-mix(in_srgb,var(--accent)_15%,transparent)] to-transparent border border-[var(--border)] flex items-center justify-center">
+                  <div className="text-5xl opacity-30">✨</div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
-
-        {/* Documents */}
-        <div className="card-bg rounded-xl p-6 space-y-4">
-          <h2 className="text-[1.25rem] font-medium text-[var(--text)]">
-            Documents
-          </h2>
-
-          <p className="text-[1.05rem] text-[var(--muted)]">
-            Store and access important family documents securely.
-          </p>
-
-          <Link
-            to="/documents"
-            className="text-sm font-medium text-[var(--accent)] hover:opacity-80"
-          >
-            Go to documents →
-          </Link>
-        </div>
-
-        {/* Rituals */}
-        <div className="card-bg rounded-xl p-6 space-y-4">
-          <h2 className="text-[1.25rem] font-medium text-[var(--text)]">
-            Rituals
-          </h2>
-
-          <p className="text-[1.05rem] text-[var(--muted)]">
-            Capture traditions and meaningful recurring moments.
-          </p>
-
-          <Link
-            to="/rituals"
-            className="text-sm font-medium text-[var(--accent)] hover:opacity-80"
-          >
-            Explore rituals →
-          </Link>
-        </div>
-
       </section>
+
+      <div className="h-16" />
     </div>
   );
 }

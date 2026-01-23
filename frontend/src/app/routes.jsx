@@ -11,7 +11,8 @@ import AppShell from "../components/layout/AppShell";
 import FamilyTree from "../pages/FamilyTree";
 import Documents from "../pages/Documents";
 import Rituals from "../pages/Rituals";
-
+import About from "../pages/About.jsx";
+import DocumentViewer from "../pages/DocumentViewer";
 
 export default function AppRoutes() {
   return (
@@ -59,7 +60,6 @@ export default function AppRoutes() {
         }
       />
 
-
       <Route
         path="/family-tree"
         element={
@@ -99,8 +99,25 @@ export default function AppRoutes() {
         }
       />
 
-    </Routes>
+      <Route
+        path="/about"
+        element={
+          <About />
+        }
+      />
 
-      
+      <Route 
+        path="/viewer"
+        element={
+        <RequireAuth>
+            <RequireFamily>
+              <AppShell>
+                <DocumentViewer />
+              </AppShell>
+            </RequireFamily>
+          </RequireAuth>
+        } 
+      />
+    </Routes>
   );
 }

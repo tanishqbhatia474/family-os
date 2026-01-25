@@ -1,8 +1,8 @@
 export function transformToD3Tree(person) {
   return {
-    id: person._id,     // used for click
+    _id: person._id,
     name: person.name,
-    raw: person,       // full object for modal
-    children: person.children?.map(transformToD3Tree) || [],
+    raw: person,
+    children: (person.children || []).map(transformToD3Tree)
   };
 }

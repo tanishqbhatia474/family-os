@@ -3,6 +3,7 @@ import { login } from "../../api/auth.api";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import FluidBackground from "@/components/visual/FluidBackground";
+import { motion } from "framer-motion";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -31,83 +32,188 @@ export default function Login() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center">
+    <div className="relative min-h-screen flex items-center justify-center px-6">
       <FluidBackground />
 
-      <form
-        onSubmit={handleSubmit}
-        className="
-          relative z-10 w-full max-w-sm
-          backdrop-blur-md
-          rounded-xl px-8 py-10
-          shadow-lg shadow-black/5
-          space-y-6
-        "
-        style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}
+      {/* Decorative elements */}
+      <div className="absolute top-10 left-10 w-20 h-20 rounded-full bg-[var(--accent)] opacity-5 blur-3xl" />
+      <div className="absolute bottom-20 right-20 w-32 h-32 rounded-full bg-[var(--accent)] opacity-5 blur-3xl" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+        className="relative z-10 w-full max-w-md"
       >
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-medium tracking-tight">
-            Log in
-          </h1>
-          <p className="text-sm" style={{ color: "var(--muted)" }}>
-            Welcome back to your family space
-          </p>
+        {/* Header */}
+        <div className="text-center mb-8">
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-[2.5rem] font-bold tracking-[-0.02em] text-[var(--text)] mb-3"
+          >
+            Welcome back
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-base text-[var(--muted)]"
+          >
+            Continue your family's story
+          </motion.p>
         </div>
 
-        {error && (
-          <p className="text-sm text-red-500 text-center">
-            {error}
-          </p>
-        )}
-
-        <div className="space-y-3">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full rounded-md px-3 py-2 border bg-transparent text-sm focus:outline-none"
-            style={{ borderColor: "var(--border)", color: "var(--text)" }}
-          />
-
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full rounded-md px-3 py-2 border bg-transparent text-sm focus:outline-none"
-            style={{ borderColor: "var(--border)", color: "var(--text)" }}
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
+        {/* Form Card */}
+        <motion.form
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          onSubmit={handleSubmit}
           className="
-            w-full rounded-md py-2 text-sm font-medium
-            transition-colors disabled:opacity-60
+            relative
+            backdrop-blur-xl
+            rounded-3xl
+            px-8 py-10
+            border border-[var(--border)]
+            shadow-2xl
+            space-y-6
           "
-          style={{
-            backgroundColor: "var(--accent)",
-            color: "white"
+          style={{ 
+            backgroundColor: "color-mix(in srgb, var(--panel) 90%, transparent)",
           }}
         >
-          {loading ? "Logging in..." : "Log in"}
-        </button>
+          {/* Subtle gradient overlay */}
+          <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/[0.05] to-transparent pointer-events-none" />
 
-        <p className="text-sm text-center" style={{ color: "var(--muted)" }}>
-          Don’t have an account?{" "}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative p-3 rounded-xl bg-red-500/10 border border-red-500/20"
+            >
+              <p className="text-sm text-red-600 dark:text-red-400 text-center">
+                {error}
+              </p>
+            </motion.div>
+          )}
+
+          <div className="relative space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-[var(--text)] mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="
+                  w-full rounded-xl px-4 py-3
+                  border border-[var(--border)]
+                  bg-[var(--bg)]
+                  text-[var(--text)]
+                  placeholder:text-[var(--muted)]
+                  text-base
+                  transition-all duration-200
+                  focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20
+                  focus:border-[var(--accent)]
+                "
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[var(--text)] mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="
+                  w-full rounded-xl px-4 py-3
+                  border border-[var(--border)]
+                  bg-[var(--bg)]
+                  text-[var(--text)]
+                  placeholder:text-[var(--muted)]
+                  text-base
+                  transition-all duration-200
+                  focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20
+                  focus:border-[var(--accent)]
+                "
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="
+              relative w-full rounded-xl py-3.5 px-6
+              text-base font-semibold
+              bg-[var(--accent)] text-white
+              transition-all duration-200
+              hover:opacity-90 hover:shadow-lg
+              disabled:opacity-60 disabled:cursor-not-allowed
+              focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2
+            "
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Logging in...
+              </span>
+            ) : (
+              "Log in"
+            )}
+          </button>
+
+          <div className="relative pt-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[var(--border)]" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-3 bg-[color-mix(in_srgb,var(--panel)_90%,transparent)] text-[var(--muted)]">
+                New to Family OS?
+              </span>
+            </div>
+          </div>
+
           <Link
             to="/signup"
-            className="font-medium hover:underline"
-            style={{ color: "var(--accent)" }}
+            className="
+              block text-center
+              text-base font-medium text-[var(--accent)]
+              hover:underline
+              transition-all duration-200
+            "
           >
-            Sign up
+            Create an account →
           </Link>
-        </p>
-      </form>
+        </motion.form>
+
+        {/* Footer link */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="mt-8 text-center"
+        >
+          <Link
+            to="/about"
+            className="text-sm text-[var(--muted)] hover:text-[var(--text)] transition-colors"
+          >
+            Learn more about Family OS
+          </Link>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

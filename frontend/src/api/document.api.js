@@ -12,3 +12,6 @@ export const getDownloadUrl = (id) =>
 export const deleteDocument = (id) =>
   http.delete(`/document/${id}`);
 
+export const getViewUrl = (id) =>
+  http.get(`/document/${id}/view`);
+

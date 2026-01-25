@@ -41,7 +41,7 @@ export default function FloatingActions() {
         )}
       </Button>
 
-      {/* Logout */}
+      {/* Logout
       <Button
         variant="outline"
         size="icon"
@@ -59,7 +59,7 @@ export default function FloatingActions() {
         aria-label="Logout"
       >
         <LogOut className="h-4 w-4" />
-      </Button>
+      </Button> */}
     </div>
   );
 }

@@ -7,12 +7,12 @@ export default function RootRedirect() {
   if (loading) return null;
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
-  if (!user.familyId) {
-    return <Navigate to="/onboarding" />;
+  if (user && !user.familyId) {
+    return <Navigate to="/onboarding" replace />;
   }
 
-  return <Navigate to="/dashboard" />;
+  return <Navigate to="/dashboard" replace />;
 }

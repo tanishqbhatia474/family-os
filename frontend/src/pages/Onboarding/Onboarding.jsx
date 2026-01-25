@@ -1,56 +1,95 @@
 import { Link } from "react-router-dom";
 import FluidBackground from "@/components/visual/FluidBackground";
+import { motion } from "framer-motion";
 
 export default function Onboarding() {
   return (
-    <div className="relative min-h-screen flex items-center justify-center">
+    <div className="relative min-h-screen flex items-center justify-center px-6">
       <FluidBackground />
 
-      <div
-        className="
-          relative z-10 w-full max-w-sm
-          bg-white/70 backdrop-blur-md
-          rounded-xl px-8 py-10
-          shadow-lg shadow-black/5
-          space-y-8
-        "
+      {/* Ambient accent glows */}
+      <div className="absolute top-16 right-16 w-32 h-32 rounded-full bg-[var(--accent)] opacity-5 blur-3xl" />
+      <div className="absolute bottom-24 left-24 w-40 h-40 rounded-full bg-[var(--accent)] opacity-5 blur-3xl" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+        className="relative z-10 w-full max-w-md"
       >
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-medium tracking-tight">
-            Welcome to Rituals World
+        {/* Header */}
+        <div className="text-center mb-10 space-y-3">
+          <h1 className="text-[2.75rem] font-bold tracking-[-0.02em] text-[var(--text)]">
+            Welcome
           </h1>
-          <p className="text-sm text-neutral-600">
-            Create a new family or join an existing one
+          <p className="text-base text-[var(--muted)] max-w-sm mx-auto">
+            Begin by creating a new family space, or join one you’ve been invited to.
           </p>
         </div>
 
-        <div className="space-y-3">
+        {/* Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+          className="
+            relative
+            backdrop-blur-xl
+            rounded-3xl
+            px-8 py-10
+            border border-[var(--border)]
+            shadow-2xl
+            space-y-5
+          "
+          style={{
+            backgroundColor: "color-mix(in srgb, var(--panel) 90%, transparent)"
+          }}
+        >
+          {/* Subtle gradient overlay */}
+          <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/[0.05] to-transparent pointer-events-none" />
+
           <Link
             to="/onboarding/create"
             className="
-              block w-full text-center rounded-md py-2 text-sm font-medium
-              bg-[#1F3D34] text-white
-              hover:bg-[#183128]
-              transition-colors
+              relative block w-full text-center
+              rounded-xl py-3.5
+              text-base font-semibold
+              bg-[var(--accent)] text-white
+              transition-all duration-200
+              hover:opacity-90 hover:shadow-lg
+              focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2
             "
           >
-            Create Family
+            Create a new family
           </Link>
 
           <Link
             to="/onboarding/join"
             className="
-              block w-full text-center rounded-md py-2 text-sm font-medium
-              border border-[#1F3D34]/40
-              text-[#1F3D34]
-              hover:bg-[#1F3D34]/5
-              transition-colors
+              relative block w-full text-center
+              rounded-xl py-3.5
+              text-base font-semibold
+              border-2 border-[var(--border)]
+              text-[var(--text)]
+              transition-all duration-200
+              hover:border-[var(--accent)]
+              hover:bg-[color-mix(in_srgb,var(--accent)_5%,transparent)]
             "
           >
-            Join Family
+            Join an existing family
           </Link>
-        </div>
-      </div>
+        </motion.div>
+
+        {/* Helper text */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.35 }}
+          className="mt-8 text-sm text-center text-[var(--muted)]"
+        >
+          You can always add or update family details later.
+        </motion.p>
+      </motion.div>
     </div>
   );
 }

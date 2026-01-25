@@ -1,17 +1,49 @@
 @import "tailwindcss";
 
 /* ---------- Light theme (default) ---------- */
+
 :root {
   --bg: #fafafa;
   --text: #111111;
   --muted: #6b7280;
 
   /* app-specific */
-  --panel: rgba(255, 255, 255, 0.7);
-  --border: rgba(0, 0, 0, 0.08);
-  --accent: #1f3d34; /* your green */
+
+  --panel: rgba(235, 245, 235, 0.4);
+  --border: rgba(24, 39, 33, 0.15);
+  --accent: #1f3d34;
+
+   /* 🌳 Tree-specific tokens */
+  --tree-node-bg: rgb(232, 246, 240);
+  --tree-node-border:#1f3d34;
+  --tree-line: #1f3d34;
+  --tree-text: var(--text);
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 3rem;
+  --text-5xl: 4rem;
+  
+  /* Spacing scale */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2.5rem;
+  --space-xl: 4rem;
+  --space-2xl: 6rem;
+  --space-3xl: 8rem;
+
+  --font-human: "Inter Variable", Inter, system-ui, sans-serif;
+  --font-accent: "Space Grotesk", system-ui, sans-serif;
 }
+
 /* ---------- Dark theme ---------- */
+
 html.dark {
   --bg: #0f1f1a;          /* deep green-black */
   --text: #e5f2ed;        /* soft off-white */
@@ -20,9 +52,16 @@ html.dark {
   --panel: rgba(24, 39, 33, 0.7);
   --border: rgba(255, 255, 255, 0.08);
   --accent: #7fb9a5;    /* muted mint */
+
+   /* 🌳 Tree-specific tokens */
+  --tree-node-bg: rgb(11, 43, 34);
+  --tree-node-border: #7fb9a5; 
+  --tree-line: #7fb9a5; 
+  --tree-text: var(--text);
 }
 
 /* ---------- Global layout ---------- */
+
 html,
 body,
 #root {
@@ -30,14 +69,16 @@ body,
 }
 
 body {
-  font-family: "Inter Variable", Inter, system-ui, sans-serif;
-  background-color: transparent;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  background-color: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* ---------- Tree helpers ---------- */
+
 .hidden-link {
   stroke: none !important;
 }
@@ -51,11 +92,13 @@ html.dark .tree-link {
 }
 
 /* ---------- Card background for Documents ---------- */
+
 .card-bg {
   background-color: #dbe9df; /* matches FluidBackground's lightest field */
   color: #183128; /* deep green for good contrast on light bg */
   border: 1px solid #357a5b; /* dark green border in light mode */
 }
+
 html.dark .card-bg {
   background-color: #000;
   color: #e5f2ed; /* soft off-white for dark bg */
@@ -79,10 +122,12 @@ html.dark .card-bg {
 }
 
 /* Card text overrides for accessibility and contrast */
+
 .card-bg .card-title {
   color: #183128; /* deep green for title in light mode */
   font-weight: 600;
 }
+
 html.dark .card-bg .card-title {
   color: #e5f2ed;
 }
@@ -92,6 +137,7 @@ html.dark .card-bg .card-title {
   font-size: 0.95rem;
   font-weight: 500;
 }
+
 html.dark .card-bg .card-meta {
   color: #b2cfc3;
 }
@@ -101,9 +147,11 @@ html.dark .card-bg .card-meta {
   font-weight: 500;
   text-decoration: none;
 }
+
 .card-bg .card-link:hover {
   text-decoration: underline;
 }
+
 html.dark .card-bg .card-link {
   color: #7fb9a5;
 }
@@ -115,6 +163,7 @@ html.dark .card-bg .card-link {
 .card-bg .card-link.delete {
   color: #c0392b; /* accessible red for delete in light mode */
 }
+
 html.dark .card-bg .card-link.delete {
   color: #ff7675;
 }
@@ -135,6 +184,7 @@ html.dark .card-bg .card-link.delete {
   font-weight: 600;
   font-size: 0.97rem;
 }
+
 html.dark .card-bg .row-value {
   color: #e5f2ed;
 }
@@ -147,12 +197,14 @@ html.dark .card-bg .row-value {
   font-size: 1rem;
   font-family: inherit;
 }
+
 html.dark .card-bg input,
 html.dark .card-bg select {
   background-color: #181f1a !important;
   color: #e5f2ed !important;
   border: 1px solid #b2cfc3 !important;
 }
+
 .card-bg input:focus,
 .card-bg select:focus {
   outline: 2px solid #357a5b;
@@ -160,6 +212,7 @@ html.dark .card-bg select {
 }
 
 /* ---------- Form Controls (Search / Sort) ---------- */
+
 .control {
   background-color: #eaf4ee;
   color: #183128;
@@ -190,7 +243,93 @@ html.dark .control {
 }
 
 /* Dark mode → dark picker */
+
 html.dark input[type="date"] {
   color-scheme: dark;
   color: var(--text);
+}
+
+/* ---------- Family Tree Container ---------- */
+
+.tree-canvas {
+  background-color: rgba(235, 245, 235, 0.4);
+  border-radius: 20px;
+  /* border: 1px solid var(--border);
+
+  box-shadow:
+    inset 0 0 0 1px #1f3d34,
+    0 12px 32px rgba(0,0,0,0.08); */
+
+  position: relative;
+  overflow: hidden; /* important: clip canvas waves */
+}
+
+html.dark .tree-canvas {
+  background-color: rgba(17, 67, 52, 0.3); 
+  /* box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.04),
+    0 24px 60px rgba(0,0,0,0.6); */
+}
+
+.tree-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.tree-canvas:hover {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent),
+    0 18px 48px rgba(0,0,0,0.12);
+}
+
+.expand-toggle:hover {
+  stroke: var(--accent);
+}
+
+/* Base image styling */
+.illustration {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Default (light mode) */
+.light-only {
+  display: block;
+}
+
+.dark-only {
+  display: none;
+}
+
+/* Dark mode override */
+html.dark .light-only {
+  display: none;
+}
+
+html.dark .dark-only {
+  display: block;
+}
+
+@keyframes softFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-on-load {
+  animation: softFadeUp 0.8s ease-out both;
+}
+
+.fade-in-on-load img {
+  animation: softFadeUp 1s ease-out both;
 }

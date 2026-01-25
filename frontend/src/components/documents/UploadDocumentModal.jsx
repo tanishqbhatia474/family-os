@@ -1,20 +1,55 @@
 import { useEffect, useState } from "react";
-import { uploadDocument } from "../../api/document.api";
+import { motion, AnimatePresence } from "framer-motion";
 import { getFamilyPersons } from "../../api/person.api";
+import { uploadDocument } from "../../api/document.api";
+import { useAuth } from "../../context/AuthContext";
 import { toast } from "sonner";
 
+/* ---------------- animations ---------------- */
+
+const backdropVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 }
+};
+
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: 20 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { type: "spring", damping: 25, stiffness: 300 }
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    y: 20,
+    transition: { duration: 0.2 }
+  }
+};
+
 export default function UploadDocumentModal({ onClose, onUploaded }) {
+  const { user } = useAuth();
+
   const [title, setTitle] = useState("");
   const [file, setFile] = useState(null);
   const [persons, setPersons] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  /* ---------- load family members (same as rituals) ---------- */
   useEffect(() => {
-    getFamilyPersons().then(res => setPersons(res.data));
-  }, []);
+    getFamilyPersons()
+      .then(res => {
+        const filtered = res.data.filter(
+          p => String(p._id) !== String(user.personId)
+        );
+        setPersons(filtered);
+      })
+      .catch(() => toast.error("Failed to load family members"));
+  }, [user.personId]);
 
-  const togglePerson = (id) => {
+  const togglePerson = id => {
     setSelectedIds(prev =>
       prev.includes(id)
         ? prev.filter(x => x !== id)
@@ -22,154 +57,160 @@ export default function UploadDocumentModal({ onClose, onUploaded }) {
     );
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!file) return;
+  const handleSubmit = async () => {
+    if (loading) return;
+
+    if (!file) {
+      toast.error("Please select a file");
+      return;
+    }
+
+    if (!title.trim()) {
+      toast.error("Document title is required");
+      return;
+    }
 
     setLoading(true);
 
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("title", title);
-      selectedIds.forEach(id =>
-        formData.append("viewAccessPersonIds", id)
-      );
-      await uploadDocument(formData);
-      toast.success("Document uploaded", {
-        description: "Available to selected family members",
+      formData.append("title", title.trim());
+      selectedIds.forEach(id => {
+        formData.append("viewAccessPersonIds[]", id);
       });
-      onUploaded();
+
+      await uploadDocument(formData);
+
+      toast.success("Document uploaded");
+      onUploaded?.();
       onClose();
     } catch (err) {
-    console.error("Upload failed:", err);
-    
-    let message = "Upload failed";
-
-    if (err.response?.data) {
-      if (typeof err.response.data === "string") {
-        message = err.response.data;
-      } else if (err.response.data.message) {
-        message = err.response.data.message;
-      } else {
-        message = JSON.stringify(err.response.data);
-      }
-    } else if (err.message) {
-      message = err.message;
+      toast.error(
+        err.response?.data?.message || "Failed to upload document"
+      );
+    } finally {
+      setLoading(false);
     }
-
-    toast.error("Upload failed", {
-      description: message,
-    });
-
-  } finally {
-    setLoading(false);
-  }
   };
-  return (
-    <div className="fixed inset-0 z-[100]">
-      {/* Overlay */}
-      <div className="
-          absolute inset-0
-          bg-neutral-900/20
-          dark:bg-black/70
-        "
-        onClick={onClose}
-      />
 
-      {/* Modal wrapper */}
-      <div
-        className="fixed inset-0 z-[100] flex items-center justify-center"
+  return (
+    <AnimatePresence>
+      <motion.div
+        variants={backdropVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       >
-        {/* Modal */}
-        <div
-          className="
-            relative w-[460px] rounded-2xl p-6 space-y-6
-            bg-white text-neutral-900 shadow-2xl
-            dark:bg-neutral-900 dark:text-neutral-100
-          "
-          onClick={(e) => e.stopPropagation()}
+        <motion.div
+          variants={modalVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          onClick={e => e.stopPropagation()}
+          className="relative w-full max-w-xl mx-4"
         >
-
-
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-medium">Upload Document</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
-          >
-            ✕
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Title */}
-          <input
-            placeholder="Document title"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            className="
-              w-full rounded-lg px-3 py-2 text-sm
-              border border-neutral-300
-              bg-white text-neutral-900
-              dark:border-neutral-700
-              dark:bg-neutral-800 dark:text-neutral-100
-            "
-          />
-
-          {/* File */}
-          <input
-            type="file"
-            onChange={e => setFile(e.target.files[0])}
-            className="text-sm"
-          />
-
-          {/* Share */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Share with family members</p>
-
-            <div className="border rounded-lg p-3 space-y-2 max-h-40 overflow-y-auto">
-              {persons.map(p => (
-                <label key={p._id} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(p._id)}
-                    onChange={() => togglePerson(p._id)}
-                  />
-                  {p.name}
-                </label>
-              ))}
+          <div className="relative rounded-3xl border-2 border-[var(--border)] bg-[var(--bg)] shadow-2xl overflow-hidden">
+            
+            {/* Header */}
+            <div className="px-8 py-6 bg-gradient-to-br from-[color-mix(in_srgb,var(--accent)_15%,transparent)] to-[color-mix(in_srgb,var(--accent)_5%,transparent)]">
+              <div className="flex justify-between items-start">
+                <h2 className="text-2xl font-bold">Upload Document</h2>
+                <button onClick={onClose}>✕</button>
+              </div>
             </div>
 
-            <p className="text-xs opacity-70">
-              You always have access to your own documents.
-            </p>
-          </div>
+            {/* Content */}
+            <div className="px-8 py-6 space-y-6 max-h-[60vh] overflow-y-auto">
+              <InputField
+                label="Document Title"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="e.g. Birth Certificate"
+              />
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-sm opacity-70 hover:opacity-100"
-            >
-              Cancel
-            </button>
+              <FileField
+                file={file}
+                onChange={e => setFile(e.target.files[0])}
+              />
 
-            <button
-              type="submit"
-              disabled={loading || !file}
-              className="bg-[#5A9684] text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
-            >
-              {loading ? "Uploading..." : "Upload"}
-            </button>
+              <Section title="Share With Family" icon="👨‍👩‍👧‍👦">
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {persons.map(p => (
+                    <label
+                      key={p._id}
+                      className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-[var(--panel)]"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(p._id)}
+                        onChange={() => togglePerson(p._id)}
+                      />
+                      <span className="text-sm font-medium">
+                        {p.name}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </Section>
+            </div>
+
+            {/* Actions */}
+            <div className="px-8 py-6 border-t border-[var(--border)]">
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full bg-[var(--accent)] text-white py-3 rounded-full font-semibold disabled:opacity-50"
+              >
+                {loading ? "Uploading…" : "Upload Document"}
+              </button>
+            </div>
           </div>
-        </form>
-      </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+/* ---------- helpers ---------- */
+
+function Section({ title, icon, children }) {
+  return (
+    <div className="space-y-2">
+      <h3 className="flex gap-2 font-bold">
+        <span>{icon}</span>
+        {title}
+      </h3>
+      {children}
     </div>
-  </div>
+  );
+}
+
+function InputField({ label, placeholder, ...props }) {
+  return (
+    <div className="space-y-1">
+      {label && (
+        <label className="block text-sm font-medium text-[var(--text)]">
+          {label}
+        </label>
+      )}
+      <input
+        {...props}
+        placeholder={placeholder}
+        className="w-full px-4 py-2 border rounded-xl bg-transparent text-[var(--text)] placeholder:text-[var(--muted)]"
+      />
+    </div>
+  );
+}
+
+
+function FileField({ file, onChange }) {
+  return (
+    <label className="block border-2 border-dashed rounded-xl p-4 cursor-pointer">
+      {file ? file.name : "Choose file…"}
+      <input type="file" className="hidden" onChange={onChange} />
+    </label>
   );
 }

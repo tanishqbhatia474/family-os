@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { createNoise3D } from "simplex-noise";
 
-export default function FluidBackground({ height = "85vh" }) {
+export default function FluidBackground() {
   const canvasRef = useRef(null);
   const frameRef = useRef(null);
 
@@ -17,7 +17,10 @@ export default function FluidBackground({ height = "85vh" }) {
 
     let width, heightPx, time = 0;
     let mouseX = 0.5;
-    let mouseY = 0.5;
+    let scrollY = 0;
+    let targetScrollY = 0;
+    let scrollProgress = 0;
+    let targetScrollProgress = 0;
 
     const DPR = window.devicePixelRatio || 1;
 
@@ -32,26 +35,39 @@ export default function FluidBackground({ height = "85vh" }) {
     resize();
     window.addEventListener("resize", resize);
 
-    const onMouseMove = (e) => {
-      const rect = canvas.getBoundingClientRect();
-      mouseX = (e.clientX - rect.left) / rect.width;
-      mouseY = (e.clientY - rect.top) / rect.height;
+    const onScroll = () => {
+      const maxScroll =
+        document.documentElement.scrollHeight - window.innerHeight;
+      const y = window.scrollY;
+      targetScrollProgress = maxScroll > 0 ? y / maxScroll : 0;
+      targetScrollY = y;
     };
 
-    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
 
-    const drawLayer = (color, z, speed, alpha) => {
+    const lerp = (a, b, t) => a + (b - a) * t;
+
+    const lerpColor = (c1, c2, t) => {
+      const a = c1.match(/\d+/g).map(Number);
+      const b = c2.match(/\d+/g).map(Number);
+      return `rgb(${Math.round(lerp(a[0], b[0], t))}, ${Math.round(
+        lerp(a[1], b[1], t)
+      )}, ${Math.round(lerp(a[2], b[2], t))})`;
+    };
+
+    const drawLayer = (from, to, z, speed, alpha, parallax = 1) => {
       ctx.beginPath();
+      const mirror = Math.abs(scrollProgress - 0.5) * 2;
+      const offset = scrollY * parallax * 0.25;
 
       for (let x = 0; x <= width; x += 6) {
         const nx = x / width;
         const noise =
-          noise3D(nx * 3.2 + mouseX * 0.25, z * 1.8, time * speed) *
-          0.5;
+          noise3D(nx * 2.4+ z * 10, z * 1.5, time * speed) * heightPx * 0.07;
 
         const y =
-          heightPx * (0.5 + z * 0.35) +
-          noise * heightPx * 0.12;
+          heightPx * (0.55 + z * 0.25) + noise - offset;
 
         ctx.lineTo(x, y);
       }
@@ -60,7 +76,7 @@ export default function FluidBackground({ height = "85vh" }) {
       ctx.lineTo(0, heightPx);
       ctx.closePath();
 
-      ctx.fillStyle = color;
+      ctx.fillStyle = lerpColor(from, to, mirror);
       ctx.globalAlpha = alpha;
       ctx.fill();
       ctx.globalAlpha = 1;
@@ -68,39 +84,76 @@ export default function FluidBackground({ height = "85vh" }) {
 
     const render = () => {
       time += 0.003;
+      scrollProgress = lerp(scrollProgress, targetScrollProgress, 0.08);
+      scrollY = lerp(scrollY, targetScrollY, 0.08);
+
       ctx.clearRect(0, 0, width, heightPx);
 
       const isDark = document.documentElement.classList.contains("dark");
+      const mirror = Math.abs(scrollProgress - 0.5) * 2;
 
-      /* ---------- BASE WASH ---------- */
-      const base = ctx.createLinearGradient(0, 0, width, heightPx);
+      /* ---------- BASE ---------- */
+      const base = ctx.createLinearGradient(0, 0, 0, heightPx);
 
-      if (isDark) {
-        base.addColorStop(0, "#050807"); // near black
-        base.addColorStop(1, "#0B1411"); // green-black
+      if (!isDark) {
+        base.addColorStop(
+          0,
+          lerpColor("rgb(252, 245, 235)", "rgb(245, 238, 226)", mirror)
+        );
+        base.addColorStop(
+          1,
+          lerpColor("rgb(245, 238, 226)", "rgb(252, 245, 235)", mirror)
+        );
       } else {
-        base.addColorStop(0, "#faf6f1");
-        base.addColorStop(1, "#f2ebe3");
+        base.addColorStop(
+          0,
+          lerpColor("rgb(10, 14, 12)", "rgb(18, 24, 20)", mirror)
+        );
+        base.addColorStop(
+          1,
+          lerpColor("rgb(18, 24, 20)", "rgb(10, 14, 12)", mirror)
+        );
       }
 
       ctx.fillStyle = base;
       ctx.fillRect(0, 0, width, heightPx);
 
-      /* ---------- LAYERED FIELDS ---------- */
-
+      /* ---------- LIGHT MODE LAYERS (VISIBLE GREEN) ---------- */
       if (!isDark) {
-        drawLayer("rgb(135, 160, 140)", 0.65, 0.3, 0.22);
-        drawLayer("rgb(165, 190, 170)", 0.45, 0.5, 0.26);
-        drawLayer("rgb(205, 225, 210)", 0.25, 0.7, 0.32);
-        drawLayer("rgb(235, 245, 235)", 0.05, 0.9, 0.40);
+        drawLayer(
+          "rgb(110, 145, 125)", // deep sage
+          "rgb(150, 175, 155)",
+          0.6, 0.3, 0.18, 0.4
+        );
+        drawLayer(
+          "rgb(140, 170, 150)",
+          "rgb(180, 205, 185)",
+          0.35, 0.5, 0.22, 0.6
+        );
+        drawLayer(
+          "rgb(190, 215, 200)",
+          "rgb(220, 235, 225)",
+          0.1, 0.7, 0.26, 0.8
+        );
       }
 
-      /* ---------- DARK MODE LAYERS ---------- */
+      /* ---------- DARK MODE LAYERS (CLEAR GREEN-BLACK) ---------- */
       else {
-        drawLayer("rgb(22, 44, 38)", 0.65, 0.3, 0.18);   // deep black-green
-        drawLayer("rgb(32, 66, 56)", 0.45, 0.5, 0.20);   // forest shadow
-        drawLayer("rgb(50, 98, 84)", 0.25, 0.7, 0.18);   // muted jade
-        drawLayer("rgb(90, 150, 132)", 0.05, 0.9, 0.14); // soft green glow
+        drawLayer(
+          "rgb(8, 20, 16)",   // green-black
+          "rgb(20, 45, 36)",  // emerald core
+          0.6, 0.3, 0.18, 0.4
+        );
+        drawLayer(
+          "rgb(14, 35, 28)",
+          "rgb(35, 70, 58)",
+          0.35, 0.5, 0.22, 0.6
+        );
+        drawLayer(
+          "rgb(30, 65, 54)",
+          "rgb(70, 120, 100)",
+          0.1, 0.7, 0.20, 0.8
+        );
       }
 
       if (!prefersReducedMotion) {
@@ -113,17 +166,13 @@ export default function FluidBackground({ height = "85vh" }) {
     return () => {
       cancelAnimationFrame(frameRef.current);
       window.removeEventListener("resize", resize);
-      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("scroll", onScroll);
     };
   }, []);
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-      <canvas
-        ref={canvasRef}
-        className="h-full w-full"
-        aria-hidden="true"
-      />
+    <div className="fixed inset-0 -z-10 pointer-events-none">
+      <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   );
 }

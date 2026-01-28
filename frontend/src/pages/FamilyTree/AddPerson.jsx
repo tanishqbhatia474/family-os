@@ -23,14 +23,53 @@ const isReasonableSpouseAge = (a, b) => {
   ) <= 40;
 };
 
-const isDirectRelative = (a, b) => {
-  if (!a || !b) return false;
-  return (
-    a._id === b.fatherId ||
-    a._id === b.motherId ||
-    b._id === a.fatherId ||
-    b._id === a.motherId
-  );
+const isCloseBloodRelative = (personA, personB, persons) => {
+  if (!personA || !personB) return false;
+
+  const byId = Object.fromEntries(persons.map(p => [p._id, p]));
+
+  const parentsOf = p =>
+    [p.fatherId, p.motherId].map(id => byId[id]).filter(Boolean);
+
+  const childrenOf = p =>
+    persons.filter(
+      x => x.fatherId === p._id || x.motherId === p._id
+    );
+
+  /* ---------- direct ---------- */
+  if (
+    personA._id === personB.fatherId ||
+    personA._id === personB.motherId ||
+    personB._id === personA.fatherId ||
+    personB._id === personA.motherId
+  ) {
+    return true;
+  }
+
+  /* ---------- siblings ---------- */
+  const parentsA = parentsOf(personA);
+  const parentsB = parentsOf(personB);
+
+  if (
+    parentsA.some(pa =>
+      parentsB.some(pb => pa._id === pb._id)
+    )
+  ) {
+    return true;
+  }
+
+  /* ---------- grandparent / grandchild ---------- */
+  const grandparentsA = parentsA.flatMap(parentsOf);
+  const grandparentsB = parentsB.flatMap(parentsOf);
+
+  if (
+    grandparentsA.some(gp => gp._id === personB._id) ||
+    grandparentsB.some(gp => gp._id === personA._id)
+  ) {
+    return true;
+  }
+
+  return false;
 };
 
 export default function AddPerson({ inviteCode, onPersonAdded }) {
@@ -52,6 +91,8 @@ export default function AddPerson({ inviteCode, onPersonAdded }) {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const [errors, setErrors] = useState({});
+
   const fetchPersons = async () => {
     const res = await getFamilyPersons();
     setPersons(res.data);
@@ -65,16 +106,22 @@ useEffect(() => {
   const handleSubmit = async e => {
     e.preventDefault();
 
+    const newErrors = {};
+
     if (!name.trim()) {
-      toast.error("Name is required");
-      return;
+      newErrors.name = "Name is required";
     }
+
     if (!gender) {
-      toast.error("Gender is required");
-      return;
+      newErrors.gender = "Gender is required";
     }
+
     if (!birthDate) {
-      toast.error("Birth date is required");
+      newErrors.birthDate = "Birth date is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -86,8 +133,6 @@ useEffect(() => {
       if (!father) return toast.error("Invalid father selected");
       if (father.gender !== "male")
         return toast.error("Father must be male");
-      if (father.isDeceased)
-        return toast.error("Deceased person cannot be a parent");
       if (!isOlder(father.birthDate, birth))
         return toast.error("Father must be older than the child");
     }
@@ -97,8 +142,6 @@ useEffect(() => {
       if (!mother) return toast.error("Invalid mother selected");
       if (mother.gender !== "female")
         return toast.error("Mother must be female");
-      if (mother.isDeceased)
-        return toast.error("Deceased person cannot be a parent");
       if (!isOlder(mother.birthDate, birth))
         return toast.error("Mother must be older than the child");
     }
@@ -109,30 +152,51 @@ useEffect(() => {
       if (!child) return toast.error("Invalid child selected");
       if (!isOlder(birth, child.birthDate))
         return toast.error("Parent must be older than the child");
-      if (isDeceased)
-        return toast.error("Deceased person cannot be a parent");
     }
 
     /* ---------- SPOUSE VALIDATION ---------- */
     if (spouseId) {
       const spouse = persons.find(p => p._id === spouseId);
       if (!spouse) return toast.error("Invalid spouse selected");
-      if (spouse.isDeceased)
-        return toast.error("Cannot marry a deceased person");
       if (!isReasonableSpouseAge(spouse.birthDate, birthDate))
         return toast.error("Unrealistic age gap between spouses");
-      if (isDirectRelative(spouse, { _id: "NEW", fatherId, motherId }))
-        return toast.error("Cannot add spouse who is a direct relative");
+      if (
+        isCloseBloodRelative(
+          spouse,
+          { _id: "NEW", fatherId, motherId },
+          persons
+        )
+      ) {
+        return toast.error(
+          "Cannot add spouse who is a close blood relative"
+        );
+      }
     }
 
+    // if (spouseId && childId) {
+    //   const spouse = persons.find(p => p._id === spouseId);
+    //   const child = persons.find(p => p._id === childId);
+
+    //   if (spouse && child) {
+    //     if (isCloseBloodRelative(spouse, child, persons)) {
+    //       return toast.error(
+    //         "Spouse cannot be a close blood relative of the selected child"
+    //       );
+    //     }
+    //   }
+    // }
+
     const normalizeName = name =>
-    name
-      .trim()
-      .toLowerCase()
-      .replace(/\b\w/g, c => c.toUpperCase());
+      name
+        .trim()
+        .toLowerCase()
+        .replace(/\b\w/g, c => c.toUpperCase());
 
     setLoading(true);
+
     try {
+      const actions = [];
+
       const res = await addPerson({
         name: normalizeName(name),
         gender,
@@ -146,21 +210,23 @@ useEffect(() => {
 
       if (childId && newId) {
         if (gender === "male") {
-          await setFather(childId, { fatherId: newId });
-          toast.success("Father linked to child");
+          await setFather(childId, newId);
+          actions.push("• Linked as father");
         }
         if (gender === "female") {
-          await setMother(childId, { motherId: newId });
-          toast.success("Mother linked to child");
+          await setMother(childId, newId);
+          actions.push("• Linked as mother");
         }
       }
 
       if (spouseId && newId) {
         await addSpouse(newId, spouseId);
-        toast.success("Spouse relationship created");
+        actions.push("• Spouse relationship added");
       }
 
-      toast.success("Family member added successfully");
+      toast.success("Family member added", {
+        description: actions.length ? actions.join("\n") : undefined
+      });
 
       setName("");
       setGender("");
@@ -177,7 +243,8 @@ useEffect(() => {
 
     } catch (err) {
       toast.error(
-        err?.response?.data?.message || "Failed to add person"
+        err?.response?.data?.message ||
+        "Unable to add this family member. A similar person may already exist."
       );
     } finally {
       setLoading(false);
@@ -210,53 +277,140 @@ useEffect(() => {
       <h2 className="text-lg font-semibold">Add Family Member</h2>
 
       <form onSubmit={handleSubmit} className="space-y-3">
-        <input className="control w-full" placeholder="Full name" value={name} onChange={e => setName(e.target.value)} />
-        <input className="control w-full" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} />
+      {/* Full Name */}
+      <div>
+        <input
+          className="control w-full"
+          placeholder="Full name"
+          value={name}
+          onChange={e => {
+            setName(e.target.value);
+            setErrors(prev => ({ ...prev, name: "" }));
+          }}
+        />
+        {errors.name && (
+          <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+        )}
+      </div>
 
-        <select className="control w-full" value={gender} onChange={e => setGender(e.target.value)}>
+      {/* Birth Date */}
+      <div>
+        <input
+          className="control w-full"
+          type="date"
+          value={birthDate}
+          onChange={e => {
+            setBirthDate(e.target.value);
+            setErrors(prev => ({ ...prev, birthDate: "" }));
+          }}
+        />
+        {errors.birthDate && (
+          <p className="text-sm text-red-500 mt-1">{errors.birthDate}</p>
+        )}
+      </div>
+
+      {/* Gender */}
+      <div>
+        <select
+          className="control w-full"
+          value={gender}
+          onChange={e => {
+            setGender(e.target.value);
+            setErrors(prev => ({ ...prev, gender: "" }));
+          }}
+        >
           <option value="">Select gender</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
         </select>
+        {errors.gender && (
+          <p className="text-sm text-red-500 mt-1">{errors.gender}</p>
+        )}
+      </div>
 
-        <select className="control w-full" value={fatherId} onChange={e => setFatherId(e.target.value)}>
-          <option value="">Select father (optional)</option>
-          {persons.filter(p => p.gender === "male" && !p.isDeceased).map(p =>
-            <option key={p._id} value={p._id}>{p.name}</option>
-          )}
-        </select>
+      {/* Father */}
+      <select
+        className="control w-full"
+        value={fatherId}
+        onChange={e => setFatherId(e.target.value)}
+      >
+        <option value="">Select father (optional)</option>
+        {persons
+          .filter(p => p.gender === "male" && !p.isDeceased)
+          .map(p => (
+            <option key={p._id} value={p._id}>
+              {p.name}
+            </option>
+          ))}
+      </select>
 
-        <select className="control w-full" value={motherId} onChange={e => setMotherId(e.target.value)}>
-          <option value="">Select mother (optional)</option>
-          {persons.filter(p => p.gender === "female" && !p.isDeceased).map(p =>
-            <option key={p._id} value={p._id}>{p.name}</option>
-          )}
-        </select>
+      {/* Mother */}
+      <select
+        className="control w-full"
+        value={motherId}
+        onChange={e => setMotherId(e.target.value)}
+      >
+        <option value="">Select mother (optional)</option>
+        {persons
+          .filter(p => p.gender === "female" && !p.isDeceased)
+          .map(p => (
+            <option key={p._id} value={p._id}>
+              {p.name}
+            </option>
+          ))}
+      </select>
 
-        <select className="control w-full" value={childId} onChange={e => setChildId(e.target.value)}>
-          <option value="">Add as parent of (optional)</option>
-          {persons.filter(p => !p.isDeceased).map(p =>
-            <option key={p._id} value={p._id}>{p.name}</option>
-          )}
-        </select>
+      {/* Child */}
+      <select
+        className="control w-full"
+        value={childId}
+        onChange={e => setChildId(e.target.value)}
+      >
+        <option value="">Add as parent of (optional)</option>
+        {persons
+          .filter(p => !p.isDeceased)
+          .map(p => (
+            <option key={p._id} value={p._id}>
+              {p.name}
+            </option>
+          ))}
+      </select>
 
-        <select className="control w-full" value={spouseId} onChange={e => setSpouseId(e.target.value)}>
-          <option value="">Add spouse (optional)</option>
-          {persons.filter(p => !p.isDeceased).map(p =>
-            <option key={p._id} value={p._id}>{p.name}</option>
-          )}
-        </select>
+      {/* Spouse */}
+      <select
+        className="control w-full"
+        value={spouseId}
+        onChange={e => setSpouseId(e.target.value)}
+      >
+        <option value="">Add spouse (optional)</option>
+        {persons
+          .filter(p => !p.isDeceased)
+          .map(p => (
+            <option key={p._id} value={p._id}>
+              {p.name}
+            </option>
+          ))}
+      </select>
 
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={isDeceased} onChange={e => setIsDeceased(e.target.checked)} />
-          Mark as deceased
-        </label>
+      {/* Deceased */}
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={isDeceased}
+          onChange={e => setIsDeceased(e.target.checked)}
+        />
+        Mark as deceased
+      </label>
 
-        <button disabled={loading} className="w-full py-2 rounded text-sm font-medium"
-          style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}>
-          {loading ? "Adding..." : "Add Person"}
-        </button>
-      </form>
+      {/* Submit */}
+      <button
+        disabled={loading}
+        className="w-full py-2 rounded text-sm font-medium"
+        style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}
+      >
+        {loading ? "Adding..." : "Add Person"}
+      </button>
+    </form>
     </div>
   );
 }

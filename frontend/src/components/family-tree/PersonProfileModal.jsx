@@ -126,15 +126,15 @@ export default function PersonProfileModal({
                 <InfoCard>
                   <Row label="Gender" value={person.gender || "—"} icon="⚧" />
                   <Divider />
-                  <Row label="Date of Birth" value={formatDate(person.birthDate)} icon="🎂" />
+                  <Row label="Date of Birth" value={formatDate(person.birthDate)} />
                 </InfoCard>
               </Section>
 
-              <Section title="Family Connections" icon="👨‍👩‍👧‍👦">
+              <Section title="Family Connections">
                 <InfoCard>
-                  <Row label="Father" value={father?.name || "—"} icon="👨" />
+                  <Row label="Father" value={father?.name || "—"}/>
                   <Divider />
-                  <Row label="Mother" value={mother?.name || "—"} icon="👩" />
+                  <Row label="Mother" value={mother?.name || "—"} />
                   <Divider />
                   <Row
                     label="Spouse(s)"
@@ -143,13 +143,11 @@ export default function PersonProfileModal({
                         ? spouses.map(s => s.name).join(", ")
                         : "—"
                     }
-                    icon="💑"
                   />
                   <Divider />
                   <Row
                     label="Children"
                     value={children.length > 0 ? children.length : "—"}
-                    icon="👶"
                   />
                 </InfoCard>
               </Section>

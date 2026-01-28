@@ -14,26 +14,36 @@ export default function JoinFamily() {
   const [gender, setGender] = useState("");
   const [loading, setLoading] = useState(false);
 
+  /* ---------- inline errors ---------- */
+  const [errors, setErrors] = useState({});
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const newErrors = {};
+
     if (!inviteCode.trim()) {
-      toast.error("Invite code is required");
-      return;
+      newErrors.inviteCode = "Invite code is required";
     }
+
     if (!personName.trim()) {
-      toast.error("Your full name is required");
-      return;
+      newErrors.personName = "Your full name is required";
     }
+
     if (!birthDate) {
-      toast.error("Birth date is required");
-      return;
+      newErrors.birthDate = "Birth date is required";
     }
+
     if (!gender) {
-      toast.error("Please select your gender");
+      newErrors.gender = "Please select your gender";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
+    setErrors({});
     setLoading(true);
 
     try {
@@ -51,8 +61,9 @@ export default function JoinFamily() {
       localStorage.removeItem("token");
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      toast.error("Failed to join family", {
-        description: err.response?.data?.message || "Invalid invite code"
+      toast.error("Unable to join family", {
+        description:
+          "Either the invite code is incorrect, or this family member is already linked to another account."
       });
     } finally {
       setLoading(false);
@@ -63,19 +74,14 @@ export default function JoinFamily() {
     <div className="relative min-h-screen flex items-center justify-center px-6">
       <FluidBackground />
 
-      {/* Decorative glow */}
-      <div className="absolute top-16 left-16 w-32 h-32 rounded-full bg-[var(--accent)] opacity-5 blur-3xl" />
-      <div className="absolute bottom-24 right-24 w-40 h-40 rounded-full bg-[var(--accent)] opacity-5 blur-3xl" />
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+        transition={{ duration: 0.6 }}
         className="relative z-10 w-full max-w-md"
       >
-        {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-[2.5rem] font-bold tracking-[-0.02em] text-[var(--text)] mb-3">
+          <h1 className="text-[2.5rem] font-bold text-[var(--text)] mb-3">
             Join your family
           </h1>
           <p className="text-base text-[var(--muted)]">
@@ -83,104 +89,90 @@ export default function JoinFamily() {
           </p>
         </div>
 
-        {/* Card */}
         <motion.form
           onSubmit={handleSubmit}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          noValidate
           className="
-            relative
-            backdrop-blur-xl
-            rounded-3xl
-            px-8 py-10
-            border border-[var(--border)]
-            shadow-2xl
-            space-y-6
+            backdrop-blur-xl rounded-3xl px-8 py-10
+            border border-[var(--border)] shadow-2xl space-y-6
           "
           style={{
             backgroundColor: "color-mix(in srgb, var(--panel) 90%, transparent)"
           }}
         >
-          {/* Subtle overlay */}
-          <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/[0.05] to-transparent pointer-events-none" />
+          {/* Invite Code */}
+          <Field
+            label="Invite code"
+            value={inviteCode}
+            onChange={(v) => {
+              setInviteCode(v);
+              setErrors((e) => ({ ...e, inviteCode: "" }));
+            }}
+            placeholder="e.g. FAM-8KQ2"
+            error={errors.inviteCode}
+          />
 
-          <div className="relative space-y-4">
-            <Field
-              label="Invite code"
-              value={inviteCode}
-              onChange={setInviteCode}
-              placeholder="e.g. FAM-8KQ2"
+          {/* Full Name */}
+          <Field
+            label="Your full name"
+            value={personName}
+            onChange={(v) => {
+              setPersonName(v);
+              setErrors((e) => ({ ...e, personName: "" }));
+            }}
+            placeholder="Your name"
+            error={errors.personName}
+          />
+
+          {/* Birth Date */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Birth date
+            </label>
+            <input
+              type="date"
+              value={birthDate}
+              onChange={(e) => {
+                setBirthDate(e.target.value);
+                setErrors((er) => ({ ...er, birthDate: "" }));
+              }}
+              className="w-full rounded-xl px-4 py-3 border"
             />
+            {errors.birthDate && (
+              <p className="text-sm text-red-500 mt-1">
+                {errors.birthDate}
+              </p>
+            )}
+          </div>
 
-            <Field
-              label="Your full name"
-              value={personName}
-              onChange={setPersonName}
-              placeholder="Your name"
-            />
-
-            <div>
-              <label className="block text-sm font-medium text-[var(--text)] mb-2">
-                Birth date
-              </label>
-              <input
-                type="date"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                required
-                className="
-                  w-full rounded-xl px-4 py-3
-                  border border-[var(--border)]
-                  bg-[var(--bg)]
-                  text-[var(--text)]
-                  transition-all duration-200
-                  focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20
-                  focus:border-[var(--accent)]
-                "
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[var(--text)] mb-2">
-                Gender
-              </label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                required
-                className="
-                  w-full rounded-xl px-4 py-3
-                  border border-[var(--border)]
-                  bg-[var(--bg)]
-                  text-[var(--text)]
-                  transition-all duration-200
-                  focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20
-                  focus:border-[var(--accent)]
-                "
-              >
-                <option value="" disabled>
-                  Select gender
-                </option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
+          {/* Gender */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Gender
+            </label>
+            <select
+              value={gender}
+              onChange={(e) => {
+                setGender(e.target.value);
+                setErrors((er) => ({ ...er, gender: "" }));
+              }}
+              className="w-full rounded-xl px-4 py-3 border"
+            >
+              <option value="">Select gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+            {errors.gender && (
+              <p className="text-sm text-red-500 mt-1">
+                {errors.gender}
+              </p>
+            )}
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="
-              relative w-full rounded-xl py-3.5 px-6
-              text-base font-semibold
-              bg-[var(--accent)] text-white
-              transition-all duration-200
-              hover:opacity-90 hover:shadow-lg
-              disabled:opacity-60 disabled:cursor-not-allowed
-              focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2
-            "
+            className="w-full rounded-xl py-3.5 font-semibold bg-[var(--accent)] text-white"
           >
             {loading ? "Joining family…" : "Join family"}
           </button>
@@ -190,31 +182,21 @@ export default function JoinFamily() {
   );
 }
 
-/* ---------- helper ---------- */
-
-function Field({ label, value, onChange, placeholder }) {
+/* ---------- Field helper ---------- */
+function Field({ label, value, onChange, placeholder, error }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-[var(--text)] mb-2">
-        {label}
-      </label>
+      <label className="block text-sm font-medium mb-2">{label}</label>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        required
-        className="
-          w-full rounded-xl px-4 py-3
-          border border-[var(--border)]
-          bg-[var(--bg)]
-          text-[var(--text)]
-          placeholder:text-[var(--muted)]
-          transition-all duration-200
-          focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20
-          focus:border-[var(--accent)]
-        "
+        className="w-full rounded-xl px-4 py-3 border"
       />
+      {error && (
+        <p className="text-sm text-red-500 mt-1">{error}</p>
+      )}
     </div>
   );
 }

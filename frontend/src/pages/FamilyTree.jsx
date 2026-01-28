@@ -1,18 +1,24 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 import { getFamilyPersons } from "../api/person.api";
 import { getFamilyDetails } from "../api/family.api";
+import { useAuth } from "../context/AuthContext";
 
 import AddPerson from "../pages/FamilyTree/AddPerson";
 import PersonProfileModal from "../components/family-tree/PersonProfileModal";
 import SvgFamilyTree from "../components/family-tree/SvgFamilyTree";
+import TreeControls from "../components/family-tree/TreeControls";
 
 import { buildFamilyTree } from "../components/family-tree/treeBuilder";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+
+
+/* ================= Animations ================= */
 
 const fadeUp = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 30 },
   whileInView: { opacity: 1, y: 0 },
-  transition: { duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }
+  transition: { duration: 0.9, ease: [0.25, 0.1, 0.25, 1] }
 };
 
 const staggerChildren = {
@@ -24,12 +30,20 @@ const staggerChildren = {
   }
 };
 
+
 export default function FamilyTree() {
+  const { user } = useAuth();
+
   const [people, setPeople] = useState([]);
   const [inviteCode, setInviteCode] = useState(null);
   const [selectedPerson, setSelectedPerson] = useState(null);
-  const [showHelp, setShowHelp] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+
+
+  const transformRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [canvasReady, setCanvasReady] = useState(false);
 
   /* ---------------- Fetch ---------------- */
 
@@ -45,7 +59,6 @@ export default function FamilyTree() {
       setIsOwner(familyRes.data?.isOwner === true);
     } catch (err) {
       console.error("Failed to fetch family data", err);
-      setPeople([]);
     }
   }
 
@@ -53,12 +66,84 @@ export default function FamilyTree() {
     fetchAll();
   }, []);
 
-  /* ---------------- Build recursive tree ---------------- */
+  useEffect(() => {
+    if (!canvasRef.current) return;
 
-  const rootFamily = useMemo(
-    () => buildFamilyTree(people),
-    [people]
-  );
+    const el = canvasRef.current;
+
+    const ro = new ResizeObserver(entries => {
+      const { width, height } = entries[0].contentRect;
+      if (width > 0 && height > 0) {
+        setCanvasReady(true);
+      }
+    });
+
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  /* ---------------- Build tree ---------------- */
+
+  const ownerPersonId = user?.personId;
+
+  const rootFamily = useMemo(() => {
+    if (!people.length || !ownerPersonId) return null;
+    return buildFamilyTree(people, ownerPersonId);
+  }, [people, ownerPersonId]);
+
+  
+  /* ---------------- Core Centering Logic ---------------- */
+
+  /**
+   * Centers the view on a specific person's node
+   */
+  function centerOnPerson(personId, customScale) {
+    if (!transformRef.current) return;
+    
+    setTimeout(() => {
+      const personElement = document.querySelector(`[data-person-id="${personId}"]`);
+      const svg = document.querySelector('.tree-canvas svg');
+      
+      if (!personElement || !svg) {
+        console.warn('Person element or SVG not found');
+        return;
+      }
+
+      try {
+        const bbox = personElement.getBBox();
+        const state = transformRef.current.instance.transformState;
+        const scale = customScale !== undefined ? customScale : state.scale;
+
+        const wrapper = transformRef.current.instance.wrapperComponent;
+        if (!wrapper) return;
+        
+        const vw = wrapper.offsetWidth;
+        const vh = wrapper.offsetHeight;
+
+        // Calculate the center of the person node in SVG coordinate space
+        const nodeCenterX = bbox.x + bbox.width / 2;
+        const nodeCenterY = bbox.y + bbox.height / 2;
+
+        // Position so node center aligns with viewport center
+        const targetX = (vw / 2) - (nodeCenterX * scale);
+        const targetY = (vh / 2) - (nodeCenterY * scale);
+
+        transformRef.current.setTransform(targetX, targetY, scale, 500);
+      } catch (err) {
+        console.error('Error centering on person:', err);
+      }
+    }, 150);
+  }
+
+  /* ---------------- Controls ---------------- */
+
+
+function handleFitScreen() {
+  const api = transformRef.current;
+  if (!api) return;
+
+  api.resetTransform(400);
+}
 
   /* ---------------- Render ---------------- */
 
@@ -232,34 +317,69 @@ export default function FamilyTree() {
           </motion.div>
         </motion.section>
 
-        {/* Tree Section */}
+        {/* The Tree Canvas */}
         <motion.section
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.4 }}
-          className="w-full"
+          {...fadeUp}
+          transition={{ ...fadeUp.transition, delay: 0.4 }}
+          className="w-full relative"
         >
-          <div className="tree-canvas w-full overflow-auto p-8 md:p-12">
-            <SvgFamilyTree
-              rootFamily={rootFamily}
-              onSelectPerson={setSelectedPerson}
-            />
+          <div
+            ref={canvasRef}
+            className="tree-canvas relative w-full h-[calc(100vh-220px)] overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--bg)] shadow-inner"
+          >
+            {rootFamily && canvasReady ? (
+              <TransformWrapper
+                ref={transformRef}
+                limitToBounds={false}
+                centerOnInit={false}
+                minScale={0.1}
+                maxScale={3}
+                initialScale={1}
+                initialPositionX={0}
+                initialPositionY={0}
+                wheel={{ step: 0.1 }}
+                panning={{ velocityDisabled: true }}
+                doubleClick={{ disabled: false, mode: "zoomIn", step: 0.3 }}
+                style={{ width: "100%", height: "100%" }}
+              >
+                <TransformComponent
+                  wrapperClass="w-full h-full"
+                  contentStyle={{ width: "100%", height: "100%" }}
+                >
+                  <SvgFamilyTree
+                    rootFamily={rootFamily}
+                    onSelectPerson={setSelectedPerson}
+                    currentPersonId={ownerPersonId}
+                  />
+                </TransformComponent>
+              </TransformWrapper>
+            ) : (
+              <div className="flex items-center justify-center w-full h-full">
+                <p className="text-[var(--muted)]">Loading family tree...</p>
+              </div>
+            )}
           </div>
         </motion.section>
 
-        {/* Person Profile */}
+        {/* Profile Modal */}
         {selectedPerson && (
           <PersonProfileModal
             person={selectedPerson}
-            personMap={Object.fromEntries(
-              people.map(p => [p._id, p])
-            )}
+            personMap={Object.fromEntries(people.map(p => [p._id, p]))}
             people={people}
             onClose={() => setSelectedPerson(null)}
             onSaved={fetchAll}
           />
         )}
       </div>
+
+      {/* Control Overlay */}
+      {rootFamily && (
+        <TreeControls
+          // onCenterMe={handleCenterMe}
+          onFitScreen={handleFitScreen}
+        />
+      )}
     </div>
   );
 }

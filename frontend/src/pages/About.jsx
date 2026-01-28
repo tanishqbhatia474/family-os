@@ -286,13 +286,13 @@ export default function About() {
       </section>
 
       {/* CTA */}
-      <motion.div {...fadeUp} className="mt-24 pt-12 border-t border-[var(--border)]">
+      <motion.div {...fadeUp} className="mt-24 pb-12 pt-12 border-t border-[var(--border)]">
         <div className="flex flex-wrap gap-4 items-center">
           <Link
             to="/family-tree"
             className="inline-flex items-center gap-2 px-8 py-4 ml-16 bg-[var(--accent)] text-white rounded-full font-semibold text-base hover:opacity-90 transition-all hover:gap-3"
           >
-            Start building <span className="text-xl">→</span>
+            Start building <span className="text-x">→</span>
           </Link>
         </div>
       </motion.div>

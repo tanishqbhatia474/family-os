@@ -202,6 +202,13 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
 
   const handleAddAsParentOf = async () => {
     const child = persons.find(p => p._id === childIdToLink);
+    if (
+      (person.gender === "male" && child.motherId && child.fatherId) ||
+      (person.gender === "female" && child.motherId && child.fatherId)
+    ) {
+      toast.error("Child already has two parents");
+      return;
+    }
     if (!child) return toast.error("Invalid child selection");
 
     if (person._id === child._id)
@@ -272,12 +279,28 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
         isDeceased
       });
 
-      if (fatherId !== (person.fatherId || "")) {
-        await setFather(person._id, fatherId || null);
+      // --------------------
+      // Father handling
+      // --------------------
+      if (!fatherId && person.fatherId) {
+        toast.error("Removing a parent is not supported yet");
+        return;
       }
 
-      if (motherId !== (person.motherId || "")) {
-        await setMother(person._id, motherId || null);
+      if (fatherId && fatherId !== person.fatherId) {
+        await setFather(person._id, fatherId);
+      }
+
+      // --------------------
+      // Mother handling
+      // --------------------
+      if (!motherId && person.motherId) {
+        toast.error("Removing a parent is not supported yet");
+        return;
+      }
+
+      if (motherId && motherId !== person.motherId) {
+        await setMother(person._id, motherId);
       }
 
       toast.success("Person updated successfully");
@@ -382,14 +405,18 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
               </FormSection>
 
               {/* Parents */}
-              <FormSection title="Parents" icon="👨‍👩‍👧">
+              <FormSection title="Parents">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField label="Father">
                     <select 
                       value={fatherId} 
                       onChange={e => setFatherId(e.target.value)} 
                       className="control w-full"
+                      
                     >
+                      <p className="text-xs text-[var(--muted)] mt-2">
+                        Note: Removing a parent is not supported yet.
+                      </p>
                       <option value="">Select father</option>
                       {persons.filter(p => p.gender === "male").map(p =>
                         <option key={p._id} value={p._id}>{p.name}</option>
@@ -403,6 +430,9 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
                       onChange={e => setMotherId(e.target.value)} 
                       className="control w-full"
                     >
+                      <p className="text-xs text-[var(--muted)] mt-2">
+                        Note: Removing a parent is not supported yet.
+                      </p>
                       <option value="">Select mother</option>
                       {persons.filter(p => p.gender === "female").map(p =>
                         <option key={p._id} value={p._id}>{p.name}</option>
@@ -413,7 +443,7 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
               </FormSection>
 
               {/* Add as Parent Of */}
-              <FormSection title="Link as Parent" icon="🔗">
+              <FormSection title="Link as Parent">
                 <div className="p-4 rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--panel)_50%,transparent)] space-y-3">
                   <p className="text-sm text-[var(--muted)]">
                     Add this person as a parent of an existing child
@@ -449,7 +479,7 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
               </FormSection>
 
               {/* Spouses */}
-              <FormSection title="Spouse(s)" icon="💑">
+              <FormSection title="Spouse(s)">
                 <div className="space-y-3">
                   {/* Current spouses */}
                   {currentSpouses.length > 0 && (

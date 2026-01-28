@@ -17,6 +17,19 @@ const staggerChildren = {
   }
 };
 
+const softReveal = {
+  initial: { opacity: 0, y: 10, scale: 0.98 },
+  whileInView: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.8,
+      ease: [0.22, 1, 0.36, 1]
+    }
+  }
+};
+
 export default function Dashboard() {
   return (
     <div className="relative min-h-screen">
@@ -140,10 +153,6 @@ export default function Dashboard() {
                   Open family tree
                   <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
                 </Link>
-
-                <div className="mt-8 h-48 rounded-3xl bg-gradient-to-br from-[color-mix(in_srgb,var(--accent)_20%,transparent)] to-[color-mix(in_srgb,var(--accent)_5%,transparent)] border border-[var(--border)] flex items-center justify-center">
-                  <div className="text-6xl opacity-30">🌳</div>
-                </div>
               </div>
             </motion.div>
 
@@ -172,10 +181,6 @@ export default function Dashboard() {
                   Go to documents
                   <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
                 </Link>
-
-                <div className="mt-6 h-40 rounded-2xl bg-gradient-to-br from-[color-mix(in_srgb,var(--accent)_15%,transparent)] to-transparent border border-[var(--border)] flex items-center justify-center">
-                  <div className="text-5xl opacity-30">📄</div>
-                </div>
               </div>
             </motion.div>
 
@@ -204,17 +209,44 @@ export default function Dashboard() {
                   Explore rituals
                   <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
                 </Link>
-
-                <div className="mt-6 h-40 rounded-2xl bg-gradient-to-br from-[color-mix(in_srgb,var(--accent)_15%,transparent)] to-transparent border border-[var(--border)] flex items-center justify-center">
-                  <div className="text-5xl opacity-30">✨</div>
-                </div>
               </div>
             </motion.div>
           </motion.div>
+
+          {/* Large Feature Illustration */}
+          <section className="relative px-6 py-8 md:py-12">
+            <div className="max-w-5xl mx-auto">
+              <motion.div
+                variants={softReveal}
+                initial="initial"
+                whileInView="whileInView"
+                viewport={{ once: true, margin: "-80px" }}
+                className="
+                  mt-4
+                  w-full max-w-[900px]
+                  mx-auto
+                  py-6 md:py-8
+                  rounded-3xl
+                  border border-[var(--border)]
+                  bg-[color-mix(in_srgb,var(--panel)_85%,transparent)]
+                  flex items-center justify-center
+                "
+              >
+                <img
+                  src="/illustrations/family-ecosystem-dark.png"
+                  alt="Family connections illustration"
+                  className="light-only w-full max-w-[680px] h-auto opacity-90"
+                />
+                <img
+                  src="/illustrations/family-ecosystem-light.png"
+                  alt="Family connections illustration"
+                  className="dark-only w-full max-w-[680px] h-auto opacity-90"
+                />
+              </motion.div>
+            </div>
+          </section>
         </div>
       </section>
-
-      <div className="h-16" />
     </div>
   );
 }

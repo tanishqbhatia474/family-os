@@ -1,73 +1,106 @@
 /**
  * Build a recursive family tree from flat people[]
  *
- * Output shape:
- * {
- *   id: string,
- *   parents: Person[],        // 1 or 2
- *   children: FamilyNode[]    // recursive
- * }
+ * Root is derived dynamically from the OWNER person
+ * (moves upward as parents are added)
  */
-
-export function buildFamilyTree(people) {
-  if (!Array.isArray(people) || people.length === 0) {
+export function buildFamilyTree(people, ownerPersonId) {
+  if (!Array.isArray(people) || people.length === 0 || !ownerPersonId) {
     return null;
   }
 
-  const peopleById = new Map(
-    people.map(p => [p._id, p])
-  );
+  const peopleById = new Map(people.map(p => [p._id, p]));
+  const ownerPerson = peopleById.get(ownerPersonId);
 
+  if (!ownerPerson) return null;
+
+  // 🔑 Step 1: find dynamic root SAFELY
+  const root = findDynamicRoot(ownerPerson, peopleById);
+  if (!root) return null;
+
+  // These MUST be scoped AFTER root is known
   const visited = new Set();
+  const processedChildren = new Set();
 
   function buildNode(person) {
-    if (!person || visited.has(person._id)) {
-      return null;
-    }
+    if (!person || visited.has(person._id)) return null;
 
-    // Find spouse (single spouse only for now)
     const spouse =
-      person.spouseIds?.length
-        ? peopleById.get(person.spouseIds[0]) || null
+      Array.isArray(person.spouseIds) && person.spouseIds.length > 0
+        ? peopleById.get(person.spouseIds[person.spouseIds.length - 1]) || null
         : null;
 
-    // Mark both as visited so couple is built only once
+    // mark visited (prevents duplication)
     visited.add(person._id);
-    if (spouse) {
-      visited.add(spouse._id);
-    }
+    if (spouse) visited.add(spouse._id);
 
-    // Find children from either parent
-    const children = people.filter(p =>
-      p.fatherId === person._id ||
-      p.motherId === person._id ||
-      (spouse &&
-        (p.fatherId === spouse._id ||
-        p.motherId === spouse._id))
-    );
+    const childPeople = people.filter(p => {
+      if (processedChildren.has(p._id)) return false;
+
+      const isChild =
+        p.fatherId === person._id ||
+        p.motherId === person._id ||
+        (spouse &&
+          (p.fatherId === spouse._id || p.motherId === spouse._id)) ||
+        // NEW: allow children of spouse-only nodes
+        (person.spouseIds?.includes(p.fatherId) ||
+        person.spouseIds?.includes(p.motherId));
+
+      if (isChild) {
+        processedChildren.add(p._id);
+        return true;
+      }
+      return false;
+    });
+
+    const children = childPeople
+      .map(child => buildNode(child))
+      .filter(Boolean);
 
     return {
-      id: spouse
-        ? `${person._id}_${spouse._id}`
-        : person._id,
+      id: spouse ? `${person._id}_${spouse._id}` : person._id,
       parents: spouse ? [person, spouse] : [person],
-      children: children
-        .map(child => buildNode(child))
-        .filter(Boolean)
+      children
     };
   }
 
+  return buildNode(root);
+}
 
-  // Find root people (no parents)
-  const roots = people.filter(
-    p => !p.fatherId && !p.motherId
-  );
+/* =========================
+   Root selection helpers
+========================= */
 
-  if (roots.length === 0) {
-    // fallback: pick anyone
-    return buildNode(people[0]);
+function chooseTopRoot(person, peopleById) {
+  const father = person.fatherId
+    ? peopleById.get(person.fatherId)
+    : null;
+
+  const mother = person.motherId
+    ? peopleById.get(person.motherId)
+    : null;
+
+  // both parents exist → male wins
+  if (father && mother) {
+    return father.gender === "male" ? father : mother;
   }
 
-  // Build from first root
-  return buildNode(roots[0]);
+  // otherwise whichever exists (often female)
+  return father || mother || person;
+}
+
+function findDynamicRoot(startPerson, peopleById) {
+  let current = startPerson;
+  const seen = new Set();
+
+  while (current && !seen.has(current._id)) {
+    seen.add(current._id);
+
+    const next = chooseTopRoot(current, peopleById);
+
+    if (!next || next._id === current._id) break;
+    current = next;
+  }
+
+  return current;
 }

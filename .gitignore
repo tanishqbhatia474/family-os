@@ -1,0 +1,6 @@
+# macOS
+.DS_Store
+
+# backend junk
+backend/.DS_Store
+backend/node_modules/

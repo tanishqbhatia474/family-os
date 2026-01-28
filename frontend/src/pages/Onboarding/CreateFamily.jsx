@@ -60,12 +60,12 @@ export default function CreateFamily() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-6">
+    <div className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
       <FluidBackground />
 
-      {/* Decorative glow */}
-      <div className="absolute top-16 right-16 w-32 h-32 rounded-full bg-[var(--accent)] opacity-5 blur-3xl" />
-      <div className="absolute bottom-24 left-24 w-40 h-40 rounded-full bg-[var(--accent)] opacity-5 blur-3xl" />
+      {/* Decorative glow - hidden on mobile for cleaner look */}
+      <div className="hidden sm:block absolute top-16 right-16 w-32 h-32 rounded-full bg-[var(--accent)] opacity-5 blur-3xl" />
+      <div className="hidden sm:block absolute bottom-24 left-24 w-40 h-40 rounded-full bg-[var(--accent)] opacity-5 blur-3xl" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -74,12 +74,12 @@ export default function CreateFamily() {
         className="relative z-10 w-full max-w-md"
       >
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-[2.5rem] font-bold tracking-[-0.02em] text-[var(--text)] mb-3">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-[clamp(2rem,6vw,2.5rem)] font-bold tracking-[-0.02em] text-[var(--text)] mb-2 sm:mb-3">
             Create your family
           </h1>
-          <p className="text-base text-[var(--muted)]">
-            Start a private space for your family’s story
+          <p className="text-sm sm:text-base text-[var(--muted)] px-4 sm:px-0">
+            Start a private space for your family's story
           </p>
         </div>
 
@@ -92,18 +92,18 @@ export default function CreateFamily() {
           className="
             relative
             backdrop-blur-xl
-            rounded-3xl
-            px-8 py-10
+            rounded-2xl sm:rounded-3xl
+            px-6 sm:px-8 py-8 sm:py-10
             border border-[var(--border)]
             shadow-2xl
-            space-y-6
+            space-y-5 sm:space-y-6
           "
           style={{
             backgroundColor: "color-mix(in srgb, var(--panel) 90%, transparent)"
           }}
         >
           {/* Subtle overlay */}
-          <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/[0.05] to-transparent pointer-events-none" />
+          <div className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white/[0.05] to-transparent pointer-events-none" />
 
           <div className="relative space-y-4">
             <Field
@@ -121,7 +121,7 @@ export default function CreateFamily() {
             />
 
             <div>
-              <label className="block text-sm font-medium text-[var(--text)] mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-[var(--text)] mb-2">
                 Birth date
               </label>
               <input
@@ -130,10 +130,11 @@ export default function CreateFamily() {
                 onChange={(e) => setBirthDate(e.target.value)}
                 required
                 className="
-                  w-full rounded-xl px-4 py-3
+                  w-full rounded-xl px-3 sm:px-4 py-2.5 sm:py-3
                   border border-[var(--border)]
                   bg-[var(--bg)]
                   text-[var(--text)]
+                  text-sm sm:text-base
                   transition-all duration-200
                   focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20
                   focus:border-[var(--accent)]
@@ -142,7 +143,7 @@ export default function CreateFamily() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--text)] mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-[var(--text)] mb-2">
                 Gender
               </label>
               <select
@@ -150,10 +151,11 @@ export default function CreateFamily() {
                 onChange={(e) => setGender(e.target.value)}
                 required
                 className="
-                  w-full rounded-xl px-4 py-3
+                  w-full rounded-xl px-3 sm:px-4 py-2.5 sm:py-3
                   border border-[var(--border)]
                   bg-[var(--bg)]
                   text-[var(--text)]
+                  text-sm sm:text-base
                   transition-all duration-200
                   focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20
                   focus:border-[var(--accent)]
@@ -173,8 +175,8 @@ export default function CreateFamily() {
             type="submit"
             disabled={loading}
             className="
-              relative w-full rounded-xl py-3.5 px-6
-              text-base font-semibold
+              relative w-full rounded-xl py-3 sm:py-3.5 px-6
+              text-sm sm:text-base font-semibold
               bg-[var(--accent)] text-white
               transition-all duration-200
               hover:opacity-90 hover:shadow-lg
@@ -195,7 +197,7 @@ export default function CreateFamily() {
 function Field({ label, value, onChange, placeholder }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-[var(--text)] mb-2">
+      <label className="block text-xs sm:text-sm font-medium text-[var(--text)] mb-2">
         {label}
       </label>
       <input
@@ -205,10 +207,11 @@ function Field({ label, value, onChange, placeholder }) {
         placeholder={placeholder}
         required
         className="
-          w-full rounded-xl px-4 py-3
+          w-full rounded-xl px-3 sm:px-4 py-2.5 sm:py-3
           border border-[var(--border)]
           bg-[var(--bg)]
           text-[var(--text)]
+          text-sm sm:text-base
           placeholder:text-[var(--muted)]
           transition-all duration-200
           focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20

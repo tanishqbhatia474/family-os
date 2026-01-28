@@ -5,11 +5,14 @@ export default function CoupleNodeSvg({
   mother,
   onSelect
 }) {
-  const width = 200;
-  const height = 56;
-  const radius = 12;
-  const textY = 36;
-  const maxChars = 14;
+  // Responsive sizing - smaller on mobile
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+  const width = isMobile ? 160 : 200;
+  const height = isMobile ? 48 : 56;
+  const radius = isMobile ? 10 : 12;
+  const textY = isMobile ? 30 : 36;
+  const fontSize = isMobile ? 12 : 14;
+  const maxChars = isMobile ? 10 : 14;
 
   const truncate = (name) =>
     name.length > maxChars ? name.slice(0, maxChars - 1) + "…" : name;
@@ -73,7 +76,7 @@ export default function CoupleNodeSvg({
         x={width / 4}
         y={textY}
         textAnchor="middle"
-        fontSize="14"
+        fontSize={fontSize}
         fontWeight="500"
         fill="#1f2937"
         clipPath={`url(#${clipId})`}
@@ -87,7 +90,7 @@ export default function CoupleNodeSvg({
         x={(width * 3) / 4}
         y={textY}
         textAnchor="middle"
-        fontSize="14"
+        fontSize={fontSize}
         fontWeight="500"
         fill="#1f2937"
         clipPath={`url(#${clipId})`}

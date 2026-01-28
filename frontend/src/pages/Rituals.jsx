@@ -109,44 +109,44 @@ export default function Rituals() {
   return (
     <div className="relative min-h-screen pb-20">
       {/* Hero Section */}
-      <section className="relative z-10 px-6 pt-16 pb-12 md:pt-24 md:pb-16">
+      <section className="relative z-10 px-4 sm:px-6 pt-12 pb-8 sm:pt-16 sm:pb-12 md:pt-24 md:pb-16">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: [0.25, 0.1, 0.25, 1] }}
-            className="max-w-4xl space-y-6"
+            className="max-w-4xl space-y-4 sm:space-y-6"
           >
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-[var(--accent)] to-[color-mix(in_srgb,var(--accent)_70%,transparent)] shadow-lg mb-4">
-              <ContinuumIcon size="lg" />
+            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[var(--accent)] to-[color-mix(in_srgb,var(--accent)_70%,transparent)] shadow-lg mb-3 sm:mb-4">
+              <ContinuumIcon size="md" />
             </div>
 
-            <h1 className="text-[clamp(2.5rem,7vw,4.5rem)] leading-[0.95] font-bold tracking-[-0.03em] text-[var(--text)]">
+            <h1 className="text-[clamp(2rem,7vw,4.5rem)] leading-[0.95] font-bold tracking-[-0.03em] text-[var(--text)]">
               Capture family{" "}
               <span className="text-[var(--accent)]">rituals</span>
             </h1>
 
-            <p className="text-[clamp(1.0625rem,2vw,1.25rem)] leading-relaxed text-[var(--muted)] max-w-2xl">
+            <p className="text-[clamp(1rem,2vw,1.25rem)] leading-relaxed text-[var(--muted)] max-w-2xl">
               Record the moments that repeat — celebrations, habits, and traditions that shape your family over generations.
             </p>
           </motion.div>
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-6 space-y-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 sm:space-y-12">
         {/* Controls Bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          className="flex justify-between items-center gap-4 flex-wrap rounded-2xl bg-transparent p-4"
+          className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4 rounded-2xl bg-transparent p-3 sm:p-4"
         >
-          <div className="flex items-center gap-3 flex-wrap flex-1">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
             <input
               placeholder="Search rituals…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 min-w-[200px] bg-[var(--accent)] text-white placeholder:text-white/70 border-transparent focus:border-white focus:ring-0 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
+              className="flex-1 min-w-0 bg-[var(--accent)] text-white placeholder:text-white/70 border-transparent focus:border-white focus:ring-0 rounded-lg px-4 py-2.5 text-sm font-medium transition-all"
               style={{ colorScheme: 'dark' }}
             />
 
@@ -163,9 +163,8 @@ export default function Rituals() {
 
           <button
             onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--accent)] text-white rounded-full font-semibold text-base hover:opacity-90 transition-all hover:gap-3 shadow-lg"
+            className="inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-[var(--accent)] text-white rounded-full font-semibold text-sm sm:text-base hover:opacity-90 transition-all hover:gap-3 shadow-lg whitespace-nowrap"
           >
-            {/* <span className="text-xl">➕</span> */}
             Add Ritual
           </button>
         </motion.div>
@@ -174,11 +173,11 @@ export default function Rituals() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-20"
+            className="text-center py-16 sm:py-20"
           >
             <div className="inline-flex items-center gap-3 text-[var(--muted)]">
               <div className="w-5 h-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-base">Loading rituals…</span>
+              <span className="text-sm sm:text-base">Loading rituals…</span>
             </div>
           </motion.div>
         ) : (
@@ -277,13 +276,13 @@ function Section({ title, count, children }) {
       initial="initial"
       whileInView="whileInView"
       viewport={{ once: true, margin: "-50px" }}
-      className="space-y-6"
+      className="space-y-5 sm:space-y-6"
     >
-      <div className="flex items-center gap-3">
-        <h2 className="text-[clamp(1.75rem,3vw,2.25rem)] font-bold tracking-[-0.02em] text-[var(--text)]">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <h2 className="text-[clamp(1.5rem,3vw,2.25rem)] font-bold tracking-[-0.02em] text-[var(--text)]">
           {title}
         </h2>
-        <span className="inline-flex items-center justify-center min-w-[2rem] h-8 px-3 rounded-full bg-[var(--accent)] text-white text-sm font-bold">
+        <span className="inline-flex items-center justify-center min-w-[1.75rem] sm:min-w-[2rem] h-7 sm:h-8 px-2 sm:px-3 rounded-full bg-[var(--accent)] text-white text-xs sm:text-sm font-bold">
           {count}
         </span>
       </div>
@@ -299,7 +298,7 @@ function Grid({ children }) {
       initial="initial"
       whileInView="whileInView"
       viewport={{ once: true, margin: "-50px" }}
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5"
     >
       {children}
     </motion.div>
@@ -310,21 +309,21 @@ function RitualCard({ ritual, isOwner, onView, onEdit, onDelete }) {
   return (
     <motion.div
       variants={fadeUp}
-      className="group rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-6 space-y-4 hover:border-[var(--accent)] hover:shadow-lg transition-all"
+      className="group rounded-xl sm:rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5 sm:p-6 space-y-3 sm:space-y-4 hover:border-[var(--accent)] hover:shadow-lg transition-all"
     >
-      <div className="flex items-start gap-4">
-        <div className="shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[color-mix(in_srgb,var(--accent)_70%,transparent)] shadow-md flex items-center justify-center">
+      <div className="flex items-start gap-3 sm:gap-4">
+        <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[color-mix(in_srgb,var(--accent)_70%,transparent)] shadow-md flex items-center justify-center">
           <ContinuumIcon size="sm" />
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="text-[1.0625rem] font-semibold text-[var(--text)] mb-2 line-clamp-1">
+          <h3 className="text-base sm:text-[1.0625rem] font-semibold text-[var(--text)] mb-1.5 sm:mb-2 line-clamp-1">
             {ritual.title}
           </h3>
-          <p className="text-[0.9375rem] text-[var(--muted)] line-clamp-2 leading-relaxed mb-2">
+          <p className="text-sm sm:text-[0.9375rem] text-[var(--muted)] line-clamp-2 leading-relaxed mb-1.5 sm:mb-2">
             {ritual.description}
           </p>
-          <p className="text-[0.8125rem] text-[var(--muted)]">
+          <p className="text-xs sm:text-[0.8125rem] text-[var(--muted)]">
             {new Date(ritual.createdAt).toLocaleDateString('en-US', { 
               month: 'short', 
               day: 'numeric', 
@@ -334,28 +333,27 @@ function RitualCard({ ritual, isOwner, onView, onEdit, onDelete }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 pt-2 border-t border-[var(--border)]">
+      <div className="flex items-center flex-wrap gap-2 sm:gap-3 pt-2 border-t border-[var(--border)]">
         <button 
           onClick={onView} 
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent)] hover:gap-2 transition-all group/btn"
+          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[var(--accent)] hover:gap-2 transition-all group/btn"
         >
           <span>View</span>
-          <span className="text-base group-hover/btn:translate-x-0.5 transition-transform">→</span>
+          <span className="text-sm sm:text-base group-hover/btn:translate-x-0.5 transition-transform">→</span>
         </button>
 
         {isOwner && (
           <>
             <button 
               onClick={onEdit} 
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent)] hover:gap-2 transition-all group/btn"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[var(--accent)] hover:gap-2 transition-all group/btn"
             >
               <span>Edit</span>
-              {/* <span className="text-base">✏️</span> */}
             </button>
             
             <button
               onClick={onDelete}
-              className="ml-auto text-sm font-semibold text-red-500 hover:text-red-600 transition-colors"
+              className="ml-auto text-xs sm:text-sm font-semibold text-red-500 hover:text-red-600 transition-colors"
             >
               Delete
             </button>
@@ -370,11 +368,15 @@ function Empty({ icon, title, text, action }) {
   return (
     <motion.div
       variants={fadeUp}
-      className="text-center py-16 px-6 rounded-2xl border-2 border-dashed border-[var(--border)] bg-[color-mix(in_srgb,var(--panel)_40%,transparent)]"
+      className="text-center py-12 sm:py-16 px-4 sm:px-6 rounded-xl sm:rounded-2xl border-2 border-dashed border-[var(--border)] bg-[color-mix(in_srgb,var(--panel)_40%,transparent)]"
     >
-      <div className="text-6xl mb-4 opacity-40">{icon}</div>
-      <h3 className="text-lg font-semibold text-[var(--text)] mb-2">{title}</h3>
-      <p className="text-base text-[var(--muted)] max-w-md mx-auto">{text}</p>
+      {typeof icon === 'string' ? (
+        <div className="text-5xl sm:text-6xl mb-3 sm:mb-4 opacity-40">{icon}</div>
+      ) : (
+        <div className="mb-3 sm:mb-4 flex justify-center">{icon}</div>
+      )}
+      <h3 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-2">{title}</h3>
+      <p className="text-sm sm:text-base text-[var(--muted)] max-w-md mx-auto">{text}</p>
       {action}
     </motion.div>
   );
@@ -382,7 +384,11 @@ function Empty({ icon, title, text, action }) {
 
 
 function ContinuumIcon({ size = "md", faded, invert = false }) {
-  const sizes = { sm: "w-7 h-7", md: "w-10 h-10", lg: "w-16 h-16" };
+  const sizes = { 
+    sm: "w-6 h-6 sm:w-7 sm:h-7", 
+    md: "w-8 h-8 sm:w-10 sm:h-10", 
+    lg: "w-12 h-12 sm:w-16 sm:h-16" 
+  };
 
   return (
     <>

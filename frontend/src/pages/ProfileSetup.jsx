@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import http from "../../api/http";
 import FluidBackground from "@/components/visual/FluidBackground";
+import { motion } from "framer-motion";
 
 export default function ProfileSetup() {
   const navigate = useNavigate();
@@ -29,62 +30,138 @@ export default function ProfileSetup() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center">
+    <div className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
       <FluidBackground />
 
-      <form
+      <motion.form
         onSubmit={handleSubmit}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
         className="
           relative z-10 w-full max-w-sm
-          bg-white/70 backdrop-blur-md
-          rounded-xl px-8 py-10
-          shadow-lg space-y-6
+          backdrop-blur-xl
+          rounded-2xl sm:rounded-3xl 
+          px-6 sm:px-8 py-8 sm:py-10
+          border border-[var(--border)]
+          shadow-2xl 
+          space-y-5 sm:space-y-6
         "
+        style={{
+          backgroundColor: "color-mix(in srgb, var(--panel) 90%, transparent)"
+        }}
       >
-        <h1 className="text-2xl font-medium text-center">
+        {/* Subtle overlay */}
+        <div className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white/[0.05] to-transparent pointer-events-none" />
+
+        <h1 className="text-xl sm:text-2xl font-bold tracking-[-0.01em] text-center text-[var(--text)] relative">
           Tell us about you
         </h1>
 
-        <input
-          placeholder="Full name"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          required
-          className="w-full rounded-md px-3 py-2 border bg-white/80"
-        />
+        <div className="relative space-y-4 sm:space-y-5">
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-[var(--text)] mb-2">
+              Full name
+            </label>
+            <input
+              type="text"
+              placeholder="Full name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              className="
+                w-full rounded-xl px-3 sm:px-4 py-2.5 sm:py-3
+                border border-[var(--border)]
+                bg-[var(--bg)]
+                text-[var(--text)]
+                text-sm sm:text-base
+                placeholder:text-[var(--muted)]
+                transition-all duration-200
+                focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20
+                focus:border-[var(--accent)]
+              "
+            />
+          </div>
 
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Gender</p>
-          <div className="flex gap-4 text-sm">
-            {["male", "female", "other"].map(g => (
-              <label key={g} className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="gender"
-                  value={g}
-                  checked={gender === g}
-                  onChange={() => setGender(g)}
-                />
-                {g}
-              </label>
-            ))}
+          <div>
+            <p className="text-xs sm:text-sm font-medium text-[var(--text)] mb-3">
+              Gender
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 text-xs sm:text-sm">
+              {["male", "female", "other"].map(g => (
+                <label 
+                  key={g} 
+                  className="
+                    flex items-center gap-2 sm:gap-2.5
+                    px-4 py-2.5 rounded-lg
+                    border border-[var(--border)]
+                    cursor-pointer
+                    transition-all duration-200
+                    hover:border-[var(--accent)]
+                    hover:bg-[color-mix(in_srgb,var(--accent)_5%,transparent)]
+                  "
+                  style={{
+                    backgroundColor: gender === g 
+                      ? "color-mix(in srgb, var(--accent) 10%, transparent)" 
+                      : "transparent",
+                    borderColor: gender === g ? "var(--accent)" : "var(--border)"
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="gender"
+                    value={g}
+                    checked={gender === g}
+                    onChange={() => setGender(g)}
+                    className="accent-[var(--accent)]"
+                  />
+                  <span className="capitalize text-[var(--text)] font-medium">
+                    {g}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-[var(--text)] mb-2">
+              Birth date
+            </label>
+            <input
+              type="date"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              required
+              className="
+                w-full rounded-xl px-3 sm:px-4 py-2.5 sm:py-3
+                border border-[var(--border)]
+                bg-[var(--bg)]
+                text-[var(--text)]
+                text-sm sm:text-base
+                transition-all duration-200
+                focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-20
+                focus:border-[var(--accent)]
+              "
+            />
           </div>
         </div>
 
-        <input
-          type="date"
-          value={birthDate}
-          onChange={(e) => setBirthDate(e.target.value)}
-          className="w-full rounded-md px-3 py-2 border bg-white/80"
-        />
-
         <button
+          type="submit"
           disabled={loading}
-          className="w-full bg-[#1F3D34] text-white py-2 rounded-md"
+          className="
+            relative w-full rounded-xl py-3 sm:py-3.5 px-6
+            text-sm sm:text-base font-semibold
+            bg-[var(--accent)] text-white
+            transition-all duration-200
+            hover:opacity-90 hover:shadow-lg
+            disabled:opacity-60 disabled:cursor-not-allowed
+            focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2
+          "
         >
-          Continue
+          {loading ? "Saving…" : "Continue"}
         </button>
-      </form>
+      </motion.form>
     </div>
   );
 }

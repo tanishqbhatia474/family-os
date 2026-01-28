@@ -43,7 +43,7 @@ export default function Sidebar() {
   return (
     <aside
       className="
-        fixed left-0 top-0 h-screen w-64 z-30
+        fixed left-0 top-0 h-screen w-64 max-w-[85vw] z-30
         bg-gradient-to-b from-[#0d3025] to-[#0a2a20]
         backdrop-blur-xl
         border-r border-white/5

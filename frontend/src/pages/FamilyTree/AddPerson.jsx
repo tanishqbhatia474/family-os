@@ -173,19 +173,6 @@ useEffect(() => {
       }
     }
 
-    // if (spouseId && childId) {
-    //   const spouse = persons.find(p => p._id === spouseId);
-    //   const child = persons.find(p => p._id === childId);
-
-    //   if (spouse && child) {
-    //     if (isCloseBloodRelative(spouse, child, persons)) {
-    //       return toast.error(
-    //         "Spouse cannot be a close blood relative of the selected child"
-    //       );
-    //     }
-    //   }
-    // }
-
     const normalizeName = name =>
       name
         .trim()
@@ -255,10 +242,12 @@ useEffect(() => {
     <div className="max-w-xl space-y-4">
       {inviteCode && (
         <div
-          className="flex items-center justify-between rounded-md px-4 py-2 text-sm"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 rounded-lg sm:rounded-md px-4 py-3 sm:py-2 text-sm"
           style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}
         >
-          <span>Invite code: <b>{inviteCode}</b></span>
+          <span className="font-medium">
+            Invite code: <b className="font-bold">{inviteCode}</b>
+          </span>
           <button
             onClick={() => {
               navigator.clipboard.writeText(inviteCode);
@@ -266,7 +255,7 @@ useEffect(() => {
               toast.success("Invite code copied");
               setTimeout(() => setCopied(false), 2000);
             }}
-            className="flex items-center gap-1 text-xs"
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-medium hover:opacity-80 transition-opacity"
           >
             {copied ? <Check size={14} /> : <Copy size={14} />}
             {copied ? "Copied" : "Copy"}
@@ -274,143 +263,175 @@ useEffect(() => {
         </div>
       )}
 
-      <h2 className="text-lg font-semibold">Add Family Member</h2>
+      <h2 className="text-lg sm:text-xl font-semibold text-[var(--text)]">
+        Add Family Member
+      </h2>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
-      {/* Full Name */}
-      <div>
-        <input
-          className="control w-full"
-          placeholder="Full name"
-          value={name}
-          onChange={e => {
-            setName(e.target.value);
-            setErrors(prev => ({ ...prev, name: "" }));
-          }}
-        />
-        {errors.name && (
-          <p className="text-sm text-red-500 mt-1">{errors.name}</p>
-        )}
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        {/* Full Name */}
+        <div>
+          <label className="block text-xs sm:text-sm font-medium text-[var(--text)] mb-1.5 sm:mb-2">
+            Full name
+          </label>
+          <input
+            className="control w-full text-sm sm:text-base px-3 sm:px-4 py-2.5 sm:py-3"
+            placeholder="Full name"
+            value={name}
+            onChange={e => {
+              setName(e.target.value);
+              setErrors(prev => ({ ...prev, name: "" }));
+            }}
+          />
+          {errors.name && (
+            <p className="text-xs sm:text-sm text-red-500 mt-1.5">{errors.name}</p>
+          )}
+        </div>
 
-      {/* Birth Date */}
-      <div>
-        <input
-          className="control w-full"
-          type="date"
-          value={birthDate}
-          onChange={e => {
-            setBirthDate(e.target.value);
-            setErrors(prev => ({ ...prev, birthDate: "" }));
-          }}
-        />
-        {errors.birthDate && (
-          <p className="text-sm text-red-500 mt-1">{errors.birthDate}</p>
-        )}
-      </div>
+        {/* Birth Date */}
+        <div>
+          <label className="block text-xs sm:text-sm font-medium text-[var(--text)] mb-1.5 sm:mb-2">
+            Birth date
+          </label>
+          <input
+            className="control w-full text-sm sm:text-base px-3 sm:px-4 py-2.5 sm:py-3"
+            type="date"
+            value={birthDate}
+            onChange={e => {
+              setBirthDate(e.target.value);
+              setErrors(prev => ({ ...prev, birthDate: "" }));
+            }}
+          />
+          {errors.birthDate && (
+            <p className="text-xs sm:text-sm text-red-500 mt-1.5">{errors.birthDate}</p>
+          )}
+        </div>
 
-      {/* Gender */}
-      <div>
-        <select
-          className="control w-full"
-          value={gender}
-          onChange={e => {
-            setGender(e.target.value);
-            setErrors(prev => ({ ...prev, gender: "" }));
-          }}
+        {/* Gender */}
+        <div>
+          <label className="block text-xs sm:text-sm font-medium text-[var(--text)] mb-1.5 sm:mb-2">
+            Gender
+          </label>
+          <select
+            className="control w-full text-sm sm:text-base px-3 sm:px-4 py-2.5 sm:py-3"
+            value={gender}
+            onChange={e => {
+              setGender(e.target.value);
+              setErrors(prev => ({ ...prev, gender: "" }));
+            }}
+          >
+            <option value="">Select gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+          {errors.gender && (
+            <p className="text-xs sm:text-sm text-red-500 mt-1.5">{errors.gender}</p>
+          )}
+        </div>
+
+        {/* Father */}
+        <div>
+          <label className="block text-xs sm:text-sm font-medium text-[var(--text)] mb-1.5 sm:mb-2">
+            Father (optional)
+          </label>
+          <select
+            className="control w-full text-sm sm:text-base px-3 sm:px-4 py-2.5 sm:py-3"
+            value={fatherId}
+            onChange={e => setFatherId(e.target.value)}
+          >
+            <option value="">Select father</option>
+            {persons
+              .filter(p => p.gender === "male" && !p.isDeceased)
+              .map(p => (
+                <option key={p._id} value={p._id}>
+                  {p.name}
+                </option>
+              ))}
+          </select>
+        </div>
+
+        {/* Mother */}
+        <div>
+          <label className="block text-xs sm:text-sm font-medium text-[var(--text)] mb-1.5 sm:mb-2">
+            Mother (optional)
+          </label>
+          <select
+            className="control w-full text-sm sm:text-base px-3 sm:px-4 py-2.5 sm:py-3"
+            value={motherId}
+            onChange={e => setMotherId(e.target.value)}
+          >
+            <option value="">Select mother</option>
+            {persons
+              .filter(p => p.gender === "female" && !p.isDeceased)
+              .map(p => (
+                <option key={p._id} value={p._id}>
+                  {p.name}
+                </option>
+              ))}
+          </select>
+        </div>
+
+        {/* Child */}
+        <div>
+          <label className="block text-xs sm:text-sm font-medium text-[var(--text)] mb-1.5 sm:mb-2">
+            Add as parent of (optional)
+          </label>
+          <select
+            className="control w-full text-sm sm:text-base px-3 sm:px-4 py-2.5 sm:py-3"
+            value={childId}
+            onChange={e => setChildId(e.target.value)}
+          >
+            <option value="">Select child</option>
+            {persons
+              .filter(p => !p.isDeceased)
+              .map(p => (
+                <option key={p._id} value={p._id}>
+                  {p.name}
+                </option>
+              ))}
+          </select>
+        </div>
+
+        {/* Spouse */}
+        <div>
+          <label className="block text-xs sm:text-sm font-medium text-[var(--text)] mb-1.5 sm:mb-2">
+            Spouse (optional)
+          </label>
+          <select
+            className="control w-full text-sm sm:text-base px-3 sm:px-4 py-2.5 sm:py-3"
+            value={spouseId}
+            onChange={e => setSpouseId(e.target.value)}
+          >
+            <option value="">Add spouse</option>
+            {persons
+              .filter(p => !p.isDeceased)
+              .map(p => (
+                <option key={p._id} value={p._id}>
+                  {p.name}
+                </option>
+              ))}
+          </select>
+        </div>
+
+        {/* Deceased */}
+        <label className="flex items-center gap-2 text-xs sm:text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isDeceased}
+            onChange={e => setIsDeceased(e.target.checked)}
+            className="w-4 h-4 sm:w-5 sm:h-5 accent-[var(--accent)]"
+          />
+          <span className="text-[var(--text)]">Mark as deceased</span>
+        </label>
+
+        {/* Submit */}
+        <button
+          disabled={loading}
+          className="w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-all hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+          style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}
         >
-          <option value="">Select gender</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-        </select>
-        {errors.gender && (
-          <p className="text-sm text-red-500 mt-1">{errors.gender}</p>
-        )}
-      </div>
-
-      {/* Father */}
-      <select
-        className="control w-full"
-        value={fatherId}
-        onChange={e => setFatherId(e.target.value)}
-      >
-        <option value="">Select father (optional)</option>
-        {persons
-          .filter(p => p.gender === "male" && !p.isDeceased)
-          .map(p => (
-            <option key={p._id} value={p._id}>
-              {p.name}
-            </option>
-          ))}
-      </select>
-
-      {/* Mother */}
-      <select
-        className="control w-full"
-        value={motherId}
-        onChange={e => setMotherId(e.target.value)}
-      >
-        <option value="">Select mother (optional)</option>
-        {persons
-          .filter(p => p.gender === "female" && !p.isDeceased)
-          .map(p => (
-            <option key={p._id} value={p._id}>
-              {p.name}
-            </option>
-          ))}
-      </select>
-
-      {/* Child */}
-      <select
-        className="control w-full"
-        value={childId}
-        onChange={e => setChildId(e.target.value)}
-      >
-        <option value="">Add as parent of (optional)</option>
-        {persons
-          .filter(p => !p.isDeceased)
-          .map(p => (
-            <option key={p._id} value={p._id}>
-              {p.name}
-            </option>
-          ))}
-      </select>
-
-      {/* Spouse */}
-      <select
-        className="control w-full"
-        value={spouseId}
-        onChange={e => setSpouseId(e.target.value)}
-      >
-        <option value="">Add spouse (optional)</option>
-        {persons
-          .filter(p => !p.isDeceased)
-          .map(p => (
-            <option key={p._id} value={p._id}>
-              {p.name}
-            </option>
-          ))}
-      </select>
-
-      {/* Deceased */}
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={isDeceased}
-          onChange={e => setIsDeceased(e.target.checked)}
-        />
-        Mark as deceased
-      </label>
-
-      {/* Submit */}
-      <button
-        disabled={loading}
-        className="w-full py-2 rounded text-sm font-medium"
-        style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}
-      >
-        {loading ? "Adding..." : "Add Person"}
-      </button>
-    </form>
+          {loading ? "Adding..." : "Add Person"}
+        </button>
+      </form>
     </div>
   );
 }

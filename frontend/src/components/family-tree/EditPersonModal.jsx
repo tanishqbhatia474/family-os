@@ -323,7 +323,7 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
         initial="hidden"
         animate="visible"
         exit="hidden"
-        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
         onClick={onClose}
       >
         <motion.div
@@ -332,49 +332,50 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
           animate="visible"
           exit="exit"
           onClick={e => e.stopPropagation()}
-          className="relative w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden"
+          className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden"
         >
-          {/* Gradient border effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)] to-[color-mix(in_srgb,var(--accent)_50%,transparent)] rounded-3xl blur-xl opacity-25"></div>
+          {/* Gradient border effect - hidden on mobile */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)] to-[color-mix(in_srgb,var(--accent)_50%,transparent)] rounded-2xl sm:rounded-3xl blur-xl opacity-25 hidden sm:block"></div>
           
-          <div className="relative rounded-3xl border-2 border-[var(--border)] bg-[var(--bg)] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="relative rounded-2xl sm:rounded-3xl border-2 border-[var(--border)] bg-[var(--bg)] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Header */}
-            <div className="px-8 py-6 bg-gradient-to-br from-[color-mix(in_srgb,var(--accent)_15%,transparent)] to-[color-mix(in_srgb,var(--accent)_5%,transparent)] border-b border-[var(--border)]">
+            <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6 bg-gradient-to-br from-[color-mix(in_srgb,var(--accent)_15%,transparent)] to-[color-mix(in_srgb,var(--accent)_5%,transparent)] border-b border-[var(--border)]">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[color-mix(in_srgb,var(--accent)_70%,transparent)] flex items-center justify-center text-white text-lg shadow-lg">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-[var(--accent)] to-[color-mix(in_srgb,var(--accent)_70%,transparent)] flex items-center justify-center text-white text-base sm:text-lg shadow-lg">
                     ✏️
                   </div>
-                  <h3 className="text-xl font-bold text-[var(--text)]">Edit Person</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-[var(--text)]">Edit Person</h3>
                 </div>
                 <button 
                   onClick={onClose} 
-                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)] hover:text-[var(--text)]"
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center hover:bg-[var(--border)] transition-colors text-[var(--muted)] hover:text-[var(--text)] min-h-[44px] sm:min-h-0"
+                  aria-label="Close modal"
                 >
-                  <span className="text-xl">✕</span>
+                  <span className="text-lg sm:text-xl">✕</span>
                 </button>
               </div>
             </div>
 
             {/* Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6 space-y-5 sm:space-y-6">
               {/* Basic Info */}
               <FormSection title="Basic Information" icon="📋">
                 <FormField label="Name" required>
                   <input 
                     value={name} 
                     onChange={e => setName(e.target.value)} 
-                    className="control w-full"
+                    className="control w-full text-sm sm:text-base"
                     placeholder="Enter full name"
                   />
                 </FormField>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <FormField label="Gender" required>
                     <select 
                       value={gender} 
                       onChange={e => setGender(e.target.value)} 
-                      className="control w-full"
+                      className="control w-full text-sm sm:text-base"
                     >
                       <option value="">Select gender</option>
                       <option value="male">Male</option>
@@ -388,71 +389,70 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
                       type="date" 
                       value={birthDate} 
                       onChange={e => setBirthDate(e.target.value)} 
-                      className="control w-full"
+                      className="control w-full text-sm sm:text-base"
                     />
                   </FormField>
                 </div>
 
-                <label className="flex items-center gap-3 p-4 rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--panel)_50%,transparent)] cursor-pointer hover:border-[var(--accent)] transition-all">
+                <label className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--panel)_50%,transparent)] cursor-pointer hover:border-[var(--accent)] transition-all min-h-[44px]">
                   <input
                     type="checkbox"
                     checked={isDeceased}
                     onChange={e => setIsDeceased(e.target.checked)}
                     className="w-5 h-5 rounded accent-[var(--accent)]"
                   />
-                  <span className="text-sm font-medium text-[var(--text)]">Mark as deceased</span>
+                  <span className="text-xs sm:text-sm font-medium text-[var(--text)]">Mark as deceased</span>
                 </label>
               </FormSection>
 
               {/* Parents */}
               <FormSection title="Parents">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <FormField label="Father">
                     <select 
                       value={fatherId} 
                       onChange={e => setFatherId(e.target.value)} 
-                      className="control w-full"
-                      
+                      className="control w-full text-sm sm:text-base"
                     >
-                      <p className="text-xs text-[var(--muted)] mt-2">
-                        Note: Removing a parent is not supported yet.
-                      </p>
                       <option value="">Select father</option>
                       {persons.filter(p => p.gender === "male").map(p =>
                         <option key={p._id} value={p._id}>{p.name}</option>
                       )}
                     </select>
+                    <p className="text-xs text-[var(--muted)] mt-1.5 sm:mt-2">
+                      Note: Removing a parent is not supported yet.
+                    </p>
                   </FormField>
 
                   <FormField label="Mother">
                     <select 
                       value={motherId} 
                       onChange={e => setMotherId(e.target.value)} 
-                      className="control w-full"
+                      className="control w-full text-sm sm:text-base"
                     >
-                      <p className="text-xs text-[var(--muted)] mt-2">
-                        Note: Removing a parent is not supported yet.
-                      </p>
                       <option value="">Select mother</option>
                       {persons.filter(p => p.gender === "female").map(p =>
                         <option key={p._id} value={p._id}>{p.name}</option>
                       )}
                     </select>
+                    <p className="text-xs text-[var(--muted)] mt-1.5 sm:mt-2">
+                      Note: Removing a parent is not supported yet.
+                    </p>
                   </FormField>
                 </div>
               </FormSection>
 
               {/* Add as Parent Of */}
               <FormSection title="Link as Parent">
-                <div className="p-4 rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--panel)_50%,transparent)] space-y-3">
-                  <p className="text-sm text-[var(--muted)]">
+                <div className="p-3 sm:p-4 rounded-lg sm:rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--panel)_50%,transparent)] space-y-2 sm:space-y-3">
+                  <p className="text-xs sm:text-sm text-[var(--muted)]">
                     Add this person as a parent of an existing child
                   </p>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <select
                       value={childIdToLink}
                       onChange={e => setChildIdToLink(e.target.value)}
-                      className="control flex-1"
+                      className="control flex-1 text-sm sm:text-base"
                       disabled={eligibleChildren.length === 0}
                     >
                       <option value="">
@@ -466,7 +466,7 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
                     <button
                       onClick={handleAddAsParentOf}
                       disabled={!childIdToLink}
-                      className="px-5 py-2 rounded-lg font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                      className="px-5 py-2.5 sm:py-2 rounded-lg font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity w-full sm:w-auto min-h-[44px] sm:min-h-0 whitespace-nowrap"
                       style={{ 
                         backgroundColor: childIdToLink ? "var(--accent)" : "var(--border)", 
                         color: childIdToLink ? "white" : "var(--muted)" 
@@ -480,24 +480,24 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
 
               {/* Spouses */}
               <FormSection title="Spouse(s)">
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {/* Current spouses */}
                   {currentSpouses.length > 0 && (
                     <div className="space-y-2">
                       {currentSpouses.map(s => (
                         <div
                           key={s._id}
-                          className="flex items-center justify-between p-3 rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--panel)_50%,transparent)]"
+                          className="flex items-center justify-between p-3 rounded-lg sm:rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--panel)_50%,transparent)] gap-2"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[color-mix(in_srgb,var(--accent)_30%,transparent)] to-[color-mix(in_srgb,var(--accent)_10%,transparent)] flex items-center justify-center text-sm font-semibold text-[var(--text)]">
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[color-mix(in_srgb,var(--accent)_30%,transparent)] to-[color-mix(in_srgb,var(--accent)_10%,transparent)] flex items-center justify-center text-sm font-semibold text-[var(--text)] flex-shrink-0">
                               {s.name.charAt(0).toUpperCase()}
                             </div>
-                            <span className="font-medium text-[var(--text)]">{s.name}</span>
+                            <span className="font-medium text-[var(--text)] text-sm sm:text-base truncate">{s.name}</span>
                           </div>
                           <button
                             onClick={() => handleRemoveSpouse(s._id)}
-                            className="text-sm font-semibold text-red-500 hover:text-red-600 transition-colors"
+                            className="text-xs sm:text-sm font-semibold text-red-500 hover:text-red-600 transition-colors flex-shrink-0 min-h-[44px] sm:min-h-0 flex items-center px-2"
                             disabled={spouseLoading}
                           >
                             Remove
@@ -508,19 +508,19 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
                   )}
 
                   {currentSpouses.length === 0 && (
-                    <p className="text-sm text-[var(--muted)] italic p-3 text-center bg-[color-mix(in_srgb,var(--panel)_30%,transparent)] rounded-xl border border-dashed border-[var(--border)]">
+                    <p className="text-xs sm:text-sm text-[var(--muted)] italic p-3 text-center bg-[color-mix(in_srgb,var(--panel)_30%,transparent)] rounded-lg sm:rounded-xl border border-dashed border-[var(--border)]">
                       No spouse added
                     </p>
                   )}
 
                   {/* Add spouse */}
-                  <div className="p-4 rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--panel)_50%,transparent)] space-y-3">
-                    <p className="text-sm text-[var(--muted)]">Add a new spouse</p>
-                    <div className="flex gap-2">
+                  <div className="p-3 sm:p-4 rounded-lg sm:rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--panel)_50%,transparent)] space-y-2 sm:space-y-3">
+                    <p className="text-xs sm:text-sm text-[var(--muted)]">Add a new spouse</p>
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <select
                         value={spouseIdToAdd}
                         onChange={e => setSpouseIdToAdd(e.target.value)}
-                        className="control flex-1"
+                        className="control flex-1 text-sm sm:text-base"
                         disabled={spouseLoading || eligibleSpouses.length === 0}
                       >
                         <option value="">
@@ -536,7 +536,7 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
                       <button
                         onClick={handleAddSpouse}
                         disabled={!spouseIdToAdd || spouseLoading}
-                        className="px-5 py-2 rounded-lg font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                        className="px-5 py-2.5 sm:py-2 rounded-lg font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity w-full sm:w-auto min-h-[44px] sm:min-h-0 whitespace-nowrap"
                         style={{
                           backgroundColor: spouseIdToAdd ? "var(--accent)" : "var(--border)",
                           color: spouseIdToAdd ? "white" : "var(--muted)"
@@ -551,17 +551,17 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
             </div>
 
             {/* Actions Footer */}
-            <div className="px-8 py-6 bg-[color-mix(in_srgb,var(--panel)_30%,transparent)] border-t border-[var(--border)] flex gap-3">
+            <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6 bg-[color-mix(in_srgb,var(--panel)_30%,transparent)] border-t border-[var(--border)] flex flex-col sm:flex-row gap-2 sm:gap-3">
               <button 
                 onClick={onClose} 
-                className="flex-1 px-6 py-3 rounded-full font-semibold text-base border-2 border-[var(--border)] text-[var(--text)] hover:border-[var(--accent)] transition-all"
+                className="flex-1 px-6 py-3 rounded-full font-semibold text-sm sm:text-base border-2 border-[var(--border)] text-[var(--text)] hover:border-[var(--accent)] transition-all min-h-[44px] order-2 sm:order-1"
               >
                 Cancel
               </button>
               <button 
                 onClick={handleSave} 
                 disabled={loading} 
-                className="flex-1 px-6 py-3 rounded-full font-semibold text-base bg-[var(--accent)] text-white hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                className="flex-1 px-6 py-3 rounded-full font-semibold text-sm sm:text-base bg-[var(--accent)] text-white hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg min-h-[44px] order-1 sm:order-2"
               >
                 {loading ? "Saving..." : "Save Changes"}
               </button>
@@ -577,12 +577,12 @@ export default function EditPersonModal({ person, onClose, onSaved }) {
 
 function FormSection({ title, icon, children }) {
   return (
-    <div className="space-y-4">
-      <h4 className="flex items-center gap-2 text-base font-bold text-[var(--text)]">
-        <span className="text-xl">{icon}</span>
+    <div className="space-y-3 sm:space-y-4">
+      <h4 className="flex items-center gap-2 text-sm sm:text-base font-bold text-[var(--text)]">
+        <span className="text-lg sm:text-xl">{icon}</span>
         <span>{title}</span>
       </h4>
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {children}
       </div>
     </div>
@@ -591,8 +591,8 @@ function FormSection({ title, icon, children }) {
 
 function FormField({ label, required, children }) {
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-semibold text-[var(--text)]">
+    <div className="space-y-1.5 sm:space-y-2">
+      <label className="block text-xs sm:text-sm font-semibold text-[var(--text)]">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>

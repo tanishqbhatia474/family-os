@@ -8,7 +8,19 @@ export default function DocumentViewer() {
   const [useIframe, setUseIframe] = useState(false);
 
   if (!url) {
-    return <div style={{ padding: 40 }}>Invalid document</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[var(--bg)] px-4">
+        <div className="text-center space-y-3">
+          <div className="text-4xl sm:text-5xl mb-4">📄</div>
+          <h2 className="text-lg sm:text-xl font-semibold text-[var(--text)]">
+            Invalid document
+          </h2>
+          <p className="text-sm sm:text-base text-[var(--muted)]">
+            No document URL provided
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -19,7 +31,8 @@ export default function DocumentViewer() {
         background: "#000",
         display: "flex",
         alignItems: "center",
-        justifyContent: "center"
+        justifyContent: "center",
+        overflow: "hidden"
       }}
     >
       {!useIframe && (
@@ -29,10 +42,12 @@ export default function DocumentViewer() {
           style={{
             maxWidth: "100%",
             maxHeight: "100%",
+            width: "auto",
+            height: "auto",
             objectFit: "contain"
           }}
           onError={() => {
-            // Only now do we load iframe
+            // Fallback to iframe if image fails to load
             setUseIframe(true);
           }}
         />
@@ -47,6 +62,7 @@ export default function DocumentViewer() {
             height: "100%",
             border: "none"
           }}
+          sandbox="allow-same-origin allow-scripts"
         />
       )}
     </div>

@@ -8,7 +8,7 @@ export default function CoupleNode({
   coupleRef
 }) {
   return (
-    <div className="couple-node relative flex items-center gap-4">
+    <div className="couple-node relative flex items-center gap-2 sm:gap-4">
       <PersonNode person={primary} isHome={isHome} onSelect={onSelect} />
 
       {spouse && (
